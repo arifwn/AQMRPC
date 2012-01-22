@@ -5,6 +5,10 @@ Created on Sep 28, 2011
 '''
 
 from twisted.web import xmlrpc
+from twisted.internet import reactor, defer
+
+# for testing purpose
+from aqmrpc.twisted_demo import defer_test
 
 class Interface(xmlrpc.XMLRPC):
     
@@ -39,5 +43,6 @@ class Interface(xmlrpc.XMLRPC):
         pass
     
     def xmlrpc_test(self):
-        return 'Hello, World!'
+        d = defer_test.test_defer_to_thread('Hello, sorry it took so long :)')
+        return d
     
