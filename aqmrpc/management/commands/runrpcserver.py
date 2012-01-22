@@ -1,8 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from optparse import make_option
-import os
-import sys
 
 import twisted.web
 import twisted.internet
