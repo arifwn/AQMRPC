@@ -1,2 +1,5 @@
 *_thumb.jpg
 *.pyc
+dropin.cache
+twistd.log
+twistd.pid
