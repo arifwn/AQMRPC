@@ -1,4 +1,4 @@
-from rest.client import Connection
+from aqmrpc.rest.client import Connection
 import json
 
 if __name__ == '__main__':
