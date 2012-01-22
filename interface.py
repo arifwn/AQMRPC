@@ -32,3 +32,6 @@ class Interface():
     def get_job_info(self, job_id):
         pass
     
+    def test(self):
+        return 'Hello, World!'
+    
