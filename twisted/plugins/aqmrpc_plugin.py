@@ -24,7 +24,7 @@ from aqmrpc import interface
 
 
 if hasattr(settings, 'RPCSERVER_DEFAULT_PORT'):
-    DEFAULT_PORT = str(settings.RPCSERVER_DEFAULT_PORT)
+    DEFAULT_PORT = int(settings.RPCSERVER_DEFAULT_PORT)
 else:
     DEFAULT_PORT = 8080
 
