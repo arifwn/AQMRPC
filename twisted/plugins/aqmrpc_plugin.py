@@ -25,7 +25,7 @@ from aqmrpc import interface
 if hasattr(settings, 'RPCSERVER_DEFAULT_ADDR'):
     DEFAULT_ADDR = settings.RPCSERVER_DEFAULT_ADDR
 else:
-    DEFAULT_ADDR = '127.0.0.1'
+    DEFAULT_ADDR = ''
     
 if hasattr(settings, 'RPCSERVER_DEFAULT_PORT'):
     DEFAULT_PORT = int(settings.RPCSERVER_DEFAULT_PORT)
