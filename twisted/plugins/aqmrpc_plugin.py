@@ -22,14 +22,19 @@ from twisted.web import server, resource, xmlrpc
 
 from aqmrpc import interface
 
-
+if hasattr(settings, 'RPCSERVER_DEFAULT_ADDR'):
+    DEFAULT_ADDR = settings.RPCSERVER_DEFAULT_ADDR
+else:
+    DEFAULT_ADDR = '127.0.0.1'
+    
 if hasattr(settings, 'RPCSERVER_DEFAULT_PORT'):
     DEFAULT_PORT = int(settings.RPCSERVER_DEFAULT_PORT)
 else:
     DEFAULT_PORT = 8080
 
 class Options(usage.Options):
-    optParameters = [["port", "p", DEFAULT_PORT, "The port number to listen on."]]
+    optParameters = [["port", "p", DEFAULT_PORT, "The port number to listen on."],
+                     ["address", "a", DEFAULT_ADDR, "The address to listen on."]]
 
 class AQMServiceMaker(object):
     implements(IServiceMaker, IPlugin)
@@ -47,6 +52,6 @@ class AQMServiceMaker(object):
         root.putChild('RPC2', r)
         
         main_site = server.Site(root)
-        return internet.TCPServer(int(options["port"]), main_site)
+        return internet.TCPServer(int(options["port"]), main_site, interface=options['address'])
 
 serviceMaker = AQMServiceMaker()
