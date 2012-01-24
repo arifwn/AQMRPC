@@ -9,5 +9,5 @@ if __name__ == '__main__':
     s = xmlrpclib.ServerProxy('http://localhost:8080')
 
     print "test()"
-    print ">>", s.test()
+    print ">>", s.test_defer()
     
