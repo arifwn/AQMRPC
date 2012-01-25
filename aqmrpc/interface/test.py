@@ -18,16 +18,16 @@ class Interface(xmlrpc.XMLRPC):
         self.pool = threadpool.ThreadPool()
     
     
-    def block_2s(self, data):
-        ''' this function block for 5 seconds before returning any data.
+    def block_and_return(self, delay, data):
+        ''' this function block for 'delay' seconds before returning any data.
         '''
-        time.sleep(2)
+        time.sleep(delay)
         return data
     
-    def xmlrpc_test_defer(self):
+    def xmlrpc_test_defer(self, delay, message):
         ''' while block_5s() blocks for 5 seconds, deferToThread makes sure that
         Twisted event loop do not get blocked'''
-        d = threads.deferToThread(self.block_2s, 'Hello, sorry it took so long :)')
+        d = threads.deferToThread(self.block_and_return, delay, message)
         return d
     
     
@@ -37,8 +37,8 @@ class Interface(xmlrpc.XMLRPC):
         with open(path, 'rb') as handle:
                 return xmlrpclib.Binary(handle.read())
             
-    def xmlrpc_test_binary(self):
+    def xmlrpc_get_binary(self, path):
         '''return binary data, use deferToThread so it doesn't block'''
-        d = threads.deferToThread(self.return_binary, 'urls.py')
+        d = threads.deferToThread(self.return_binary, path)
         return d
         
