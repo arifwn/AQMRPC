@@ -10,8 +10,9 @@ from twisted.internet import threads, reactor, defer
 from twisted.python import threadpool
 import xmlrpclib
 
+from aqmrpc.interface import aqm
 
-class Interface(xmlrpc.XMLRPC):
+class Interface(aqm.Interface):
     
     def __init__(self):
         xmlrpc.XMLRPC.__init__(self)

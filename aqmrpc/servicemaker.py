@@ -15,7 +15,9 @@ from twisted.application.service import IServiceMaker
 from twisted.application import internet, service
 from twisted.web import server, resource, xmlrpc
 
-from aqmrpc.interface import test
+from aqmrpc.interface import test as aqmtest
+from aqmrpc.interface import aqm
+from servercon import supervisor
 
 if hasattr(settings, 'RPCSERVER_DEFAULT_ADDR'):
     DEFAULT_ADDR = settings.RPCSERVER_DEFAULT_ADDR
@@ -26,6 +28,11 @@ if hasattr(settings, 'RPCSERVER_DEFAULT_PORT'):
     DEFAULT_PORT = int(settings.RPCSERVER_DEFAULT_PORT)
 else:
     DEFAULT_PORT = 8080
+    
+if hasattr(settings, 'DEBUG'):
+    DEBUG = settings.DEBUG
+else:
+    DEBUG = True
 
 class Options(usage.Options):
     optParameters = [["port", "p", DEFAULT_PORT, "The port number to listen on."],
@@ -41,10 +48,28 @@ class AQMServiceMaker(object):
         """
         Construct a TCPServer that contains RPC Server.
         """
+        # make a new MultiService to hold the thread/web services
+        multi = service.MultiService()
+        
+        # make a new SupervisorService and add it to the multi service
+        sv = supervisor.SupervisorService()
+        sv.setServiceParent(multi)
+        
         root = resource.Resource()
-        r = test.Interface()
+        
+        if DEBUG:
+            r = aqmtest.Interface()
+        else:
+            r = aqm.Interface()
+            
         xmlrpc.addIntrospection(r)
         root.putChild('RPC2', r)
         
         main_site = server.Site(root)
-        return internet.TCPServer(int(options["port"]), main_site, interface=options['address'])
+        ws = internet.TCPServer(int(options["port"]), main_site, 
+                                interface=options['address'])
+        
+        # add the web server service to the multi service
+        ws.setServiceParent(multi)
+        return multi
+        
