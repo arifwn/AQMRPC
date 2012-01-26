@@ -21,8 +21,10 @@ t = thread.start_new_thread(loop, ('test',))
 time.sleep(2)
 
 for i in range(10):
-    cv.acquire()
-    cv.notify_all()
-    cv.release()
+#    cv.acquire()
+#    cv.notify_all()
+#    cv.release()
+#    time.sleep(1)
+    with cv:
+        cv.notify_all() 
     time.sleep(1)
-    
