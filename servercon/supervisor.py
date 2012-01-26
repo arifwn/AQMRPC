@@ -24,12 +24,16 @@ class QuitNotification(Job):
 
 class SupervisorThread(threading.Thread):
     
-    daemon = True
+#    daemon = True
     running = False
     
     def start(self):
-        self.running = True
-        super(SupervisorThread, self).start()
+        if self.running:
+            return False
+        else:
+            self.running = True
+            super(SupervisorThread, self).start()
+            return True
         
     def run(self):
         global _jobs
