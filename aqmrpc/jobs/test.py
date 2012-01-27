@@ -12,7 +12,7 @@ from servercon.supervisor import Job
 class TestJob(Job):
     
     def __init__(self, data=None):
-        Job.__init__(self, 'Test Job')
+        super(TestJob, self).__init__('Test Job')
         self.data = data
     
     def process(self):

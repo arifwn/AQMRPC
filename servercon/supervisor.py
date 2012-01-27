@@ -16,7 +16,7 @@ _pool = None
 _jobs = Queue.Queue()
 
 
-class Job():
+class Job(object):
     
     def __init__(self, name=None):
         if name is None:
@@ -37,7 +37,7 @@ class Job():
 class QuitNotification(Job):
     
     def __init__(self):
-        Job.__init__(self, 'Notify Supervisor to quit')
+        super(QuitNotification, self).__init__('Notify Supervisor to quit')
     
     def process(self):
         pass

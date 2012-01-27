@@ -19,7 +19,7 @@ from servercon import supervisor
 class Interface(aqm.Interface):
     
     def __init__(self):
-        xmlrpc.XMLRPC.__init__(self)
+        super(Interface, self).__init__()
         self.pool = threadpool.ThreadPool()
     
     def t_block_and_return(self, delay, data):
