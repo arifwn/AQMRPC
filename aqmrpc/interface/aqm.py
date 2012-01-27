@@ -11,5 +11,5 @@ from twisted.internet import threads, reactor, defer
 from twisted.python import threadpool
 
 
-class Interface(xmlrpc.XMLRPC, object):
+class Interface(xmlrpc.XMLRPC):
     pass
