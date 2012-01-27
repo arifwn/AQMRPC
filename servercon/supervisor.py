@@ -17,13 +17,22 @@ _jobs = Queue.Queue()
 
 
 class Job():
-    def __init__(self, target, data=None, onresult=None):
-        self.target = target
-        self.onresult = onresult
-        self.data = data
+    
+    def __init__(self):
+        pass
+    
+    def set_up(self):
+        pass
+    
+    def process(self):
+        raise NotImplementedError()
+    
+    def tear_down(self):
+        pass
 
 
 class QuitNotification(Job):
+    
     def __init__(self):
         pass
 
@@ -59,6 +68,7 @@ class SupervisorThread(threading.Thread):
 
 
 class SupervisorService(service.Service):
+    
     def __init__(self):
         global _supervisor
         global _pool
