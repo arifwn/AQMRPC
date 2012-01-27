@@ -18,8 +18,11 @@ _jobs = Queue.Queue()
 
 class Job():
     
-    def __init__(self):
-        pass
+    def __init__(self, name=None):
+        if name is None:
+            self.name = 'Job'
+        else:
+            self.name = name
     
     def set_up(self):
         pass
@@ -34,6 +37,9 @@ class Job():
 class QuitNotification(Job):
     
     def __init__(self):
+        Job.__init__(self, 'Notify Supervisor to quit')
+    
+    def process(self):
         pass
 
 
@@ -57,15 +63,39 @@ class SupervisorThread(threading.Thread):
             job = _jobs.get()
             if isinstance(job, QuitNotification):
                 break
-            # do something with the job...
+            
+            # Process Job 
+            job_name = getattr(job, 'name', '<noname>')
+            set_up = getattr(job, 'set_up', None)
+            tear_down = getattr(job, 'tear_down', None)
+            process = getattr(job, 'process', None)
+            log.msg('processing job: %s' % job_name)
+            
+            if set_up is not None:
+                try:
+                    set_up()
+                except Exception as e:
+                    log.err(e, 'Exception in job set_up()')
+            
+            if process is not None:
+                try:
+                    process()
+                except Exception as e:
+                    log.err(e, 'Exception in job process()')
         
+            if tear_down is not None:
+                try:
+                    tear_down()
+                except Exception as e:
+                    log.err(e, 'Exception in job tear_down()')
+                    
         log.msg('Supervisor thread stopped.')
     
     def stop(self):
         global _jobs
         _jobs.put(QuitNotification())
         self.running = False
-
+    
 
 class SupervisorService(service.Service):
     
@@ -95,14 +125,22 @@ class SupervisorService(service.Service):
         self.supervisor.stop()
 
 
-def _put_job(job):
+def async_call(function):
+    '''call wrapped function asyncrously in another thread
+    
+    It doesn't wait until the thread finished and return
+    immediately (fire and forget).
+    
+    '''
+    def _async_call(*args, **kwargs):
+        global _pool
+        return _pool.callInThread(function, *args, **kwargs)
+    
+    return _async_call
+
+
+@async_call
+def put_job(job):
     global _jobs
     _jobs.put(job)
 
-
-def put_job(job):
-    # shouldn't block!
-    global _pool
-    _pool.callInThread(_put_job, job)
-
-        

@@ -26,9 +26,13 @@ class Test(unittest.TestCase):
         with open(path, 'rb') as handle:
             bin = handle.read()
         
-        bin2 = self.s.get_binary(path).data
+        bin2 = self.s.test_get_binary(path).data
         self.assertEqual(len(bin), len(bin2))
-        
+    
+    def testAsyncJob(self):
+        self.s.test_async_job('test for async job!')
+        self.assertEqual(1, 1)
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
