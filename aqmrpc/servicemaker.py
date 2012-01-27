@@ -49,9 +49,8 @@ class AQMServiceMaker(object):
     options = Options
 
     def makeService(self, options):
-        """
-        Construct a TCPServer that contains RPC Server.
-        """
+        """Construct a TCPServer which contains AQM RPC Server."""
+        
         # make a new MultiService to hold the thread/web services
         multi = service.MultiService()
         
