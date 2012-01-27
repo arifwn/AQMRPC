@@ -18,11 +18,8 @@ _jobs = Queue.Queue()
 
 class Job(object):
     
-    def __init__(self, name=None):
-        if name is None:
-            self.name = 'Job'
-        else:
-            self.name = name
+    def __init__(self, *args, **kwargs):
+        self.name = getattr(kwargs, 'name', None)
     
     def set_up(self):
         pass
@@ -34,13 +31,16 @@ class Job(object):
         pass
 
 
-class QuitNotification(Job):
+class StopSupervisorJob(Job):
     
-    def __init__(self):
-        super(QuitNotification, self).__init__('Notify Supervisor to quit')
+    def __init__(self, *args, **kwargs):
+        super(StopSupervisorJob, self).__init__(*args, **kwargs)
+        if self.name is None:
+            self.name = 'Stop Supervisor'
     
     def process(self):
-        pass
+        global _supervisor
+        _supervisor.notify_stop()
 
 
 class SupervisorThread(threading.Thread):
@@ -61,8 +61,6 @@ class SupervisorThread(threading.Thread):
         log.msg('Supervisor thread started.')
         while self.running:
             job = _jobs.get()
-            if isinstance(job, QuitNotification):
-                break
             
             # Process Job 
             job_name = getattr(job, 'name', '<noname>')
@@ -93,7 +91,9 @@ class SupervisorThread(threading.Thread):
     
     def stop(self):
         global _jobs
-        _jobs.put(QuitNotification())
+        _jobs.put(StopSupervisorJob())
+    
+    def notify_stop(self):
         self.running = False
     
 
