@@ -7,7 +7,9 @@ import thread
 import threading
 import time
 
+
 cv = threading.Condition()
+
 
 def loop(arg):
     while True:
@@ -15,6 +17,7 @@ def loop(arg):
         print "wait!"
         cv.wait()
         print 'got notified!'
+
 
 t = thread.start_new_thread(loop, ('test',))
 
@@ -28,3 +31,4 @@ for i in range(10):
     with cv:
         cv.notify_all() 
     time.sleep(1)
+    

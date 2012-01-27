@@ -6,6 +6,7 @@ Created on Oct 3, 2011
 
 import settings
 
+
 class BaseModelJob():
     '''this is a base implementation of job processor.'''
     
@@ -63,10 +64,12 @@ class BaseModelJob():
             if result_flag == False:
                 break
 
+
 def test():
     import downloader
     data = downloader.simple_url_request('http://www.arstechnica.com/')
     print data
+
     
 if __name__ == '__main__':
     

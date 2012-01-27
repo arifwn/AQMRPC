@@ -67,6 +67,7 @@ def serialize_queue(file,queue_obj):
     else:
         return False
 
+
 def restore_queue(backup_filename):
     import pickle
     import Queue
@@ -98,6 +99,7 @@ def restore_queue(backup_filename):
     
     return q
 
+
 def test1():
     import Queue
     q = Queue.Queue()
@@ -117,6 +119,7 @@ def test1():
         except Exception, e:
             keep_going = False
             print e
+
 
 if __name__ == '__main__':
 #    import sys;sys.argv = ['', 'Test.test_dummy']

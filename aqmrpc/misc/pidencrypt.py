@@ -8,8 +8,10 @@ import hashlib
 import os
 import base64
 
+
 salt1 = '1qs8fjr0x'
 salt2 = 'kjnHJ9876'
+
 
 def get_encryped_pid():
     ''' Return encrypted pid '''
@@ -17,6 +19,7 @@ def get_encryped_pid():
     m = hashlib.sha512(tmp)
     digest = m.digest()
     return base64.b64encode(digest)
+
 
 def solve_encripted_pid(hash):
     ''' solve encrypted pid '''
@@ -31,8 +34,10 @@ def solve_encripted_pid(hash):
             return pid[0]
     return None
 
+
 if __name__ == '__main__':
     print os.getpid()
     hash =  get_encryped_pid()
     pid = solve_encripted_pid(hash)
     print pid
+    

@@ -3,8 +3,10 @@ Created on Sep 28, 2011
 
 @author: Arif
 '''
-from django.utils import unittest
 import xmlrpclib
+
+from django.utils import unittest
+
 
 class RPCTestInterface(unittest.TestCase):
     

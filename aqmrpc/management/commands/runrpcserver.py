@@ -6,6 +6,7 @@ import twisted.internet
 
 from aqmrpc import interface
 
+
 class Command(BaseCommand):
     help = "Starts the RPC Server."
 
@@ -13,7 +14,6 @@ class Command(BaseCommand):
         DEFAULT_PORT = str(settings.RPCSERVER_DEFAULT_PORT)
     else:
         DEFAULT_PORT = 8080
-
 
     def handle(self, addrport='', *args, **options):
         print 'Starting RPC Server on port %d' % self.DEFAULT_PORT

@@ -4,6 +4,7 @@ Created on Jan 24, 2012
 @author: arif
 '''
 import os
+
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.conf import settings
 
@@ -18,6 +19,7 @@ from twisted.web import server, resource, xmlrpc
 from aqmrpc.interface import test as aqmtest
 from aqmrpc.interface import aqm
 from servercon import supervisor
+
 
 if hasattr(settings, 'RPCSERVER_DEFAULT_ADDR'):
     DEFAULT_ADDR = settings.RPCSERVER_DEFAULT_ADDR
@@ -34,9 +36,11 @@ if hasattr(settings, 'DEBUG'):
 else:
     DEBUG = True
 
+
 class Options(usage.Options):
     optParameters = [["port", "p", DEFAULT_PORT, "The port number to listen on."],
                      ["address", "a", DEFAULT_ADDR, "The address to listen on."]]
+
 
 class AQMServiceMaker(object):
     implements(IServiceMaker, IPlugin)

@@ -4,13 +4,17 @@ Created on Jan 26, 2012
 @author: arif
 '''
 import threading
+
 from twisted.application import service
 from twisted.python import log, threadpool
+
 import Queue
+
 
 _supervisor = None
 _pool = None
 _jobs = Queue.Queue()
+
 
 class Job():
     def __init__(self, target, data=None, onresult=None):
@@ -18,9 +22,11 @@ class Job():
         self.onresult = onresult
         self.data = data
 
+
 class QuitNotification(Job):
     def __init__(self):
         pass
+
 
 class SupervisorThread(threading.Thread):
     
@@ -50,6 +56,7 @@ class SupervisorThread(threading.Thread):
         global _jobs
         _jobs.put(QuitNotification())
         self.running = False
+
 
 class SupervisorService(service.Service):
     def __init__(self):
@@ -81,6 +88,7 @@ class SupervisorService(service.Service):
 def _put_job(job):
     global _jobs
     _jobs.put(job)
+
 
 def put_job(job):
     # shouldn't block!

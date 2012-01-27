@@ -7,7 +7,9 @@ import threading
 import Queue
 import logging
 
+
 _thread_instance = None
+
 
 class ConsumerThread(threading.Thread):
     '''Download every url in queue object'''
@@ -147,6 +149,7 @@ def get_download_thread():
     
     return _thread_instance
 
+
 def stop_thread():
     '''TODO: save unfinished queue to be restored later'''
     global _thread_instance
@@ -154,6 +157,7 @@ def stop_thread():
         _thread_instance.stop()
     except:
         pass
+
 
 if __name__ == '__main__':
     import time

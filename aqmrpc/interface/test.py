@@ -5,19 +5,20 @@ Created on Sep 28, 2011
 '''
 
 import time
+import xmlrpclib
+
 from twisted.web import xmlrpc
 from twisted.internet import threads, reactor, defer
 from twisted.python import threadpool
-import xmlrpclib
 
 from aqmrpc.interface import aqm
+
 
 class Interface(aqm.Interface):
     
     def __init__(self):
         xmlrpc.XMLRPC.__init__(self)
         self.pool = threadpool.ThreadPool()
-    
     
     def block_and_return(self, delay, data):
         ''' this function block for 'delay' seconds before returning any data.
@@ -30,7 +31,6 @@ class Interface(aqm.Interface):
         Twisted event loop do not get blocked'''
         d = threads.deferToThread(self.block_and_return, delay, message)
         return d
-    
     
     def return_binary(self, path):
         ''' return binary data from specified path

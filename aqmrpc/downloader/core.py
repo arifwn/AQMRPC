@@ -8,6 +8,7 @@ import urllib
 import urllib2
 import os.path
 
+
 class UrlClient():
     proxy_handler = None
     cookie_jar = cookielib.CookieJar()
@@ -65,8 +66,6 @@ class UrlClient():
                     break
                 f.write(data)
         
-
-# ------------------------------------------------
     
 def test1():
     params = urllib.urlencode({'email': 'arif@ftsl.itb.ac.id', 
@@ -110,6 +109,7 @@ def test1():
 #            f.write(data)
 #    print r.info()
 
+
 def test2():
     c = UrlClient()
     login_params = {'email': 'arif@ftsl.itb.ac.id', 
@@ -122,11 +122,13 @@ def test2():
     c.download(url, 'test.bin')
     print 'done!'
 
+
 def test3():
     c = UrlClient()
     url = 'http://www.google.com/images/nav_logo89.png'
     c.download(url, 'test.png')
     print 'done!'
+
 
 def test_proxy():
     c = UrlClient()
@@ -134,8 +136,8 @@ def test_proxy():
     c.set_proxy('http://hexanouns:siskacool@cache.itb.ac.id:8080')
     c.download(url, 'test.png')
     print 'done!'
+
     
-if __name__ == '__main__':
-    
+if __name__ == '__main__':    
     test_proxy()
     

@@ -12,8 +12,10 @@ from signal import SIGTERM
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 
+
 class AsyncXMLRPCServer(SocketServer.ThreadingMixIn,SimpleXMLRPCServer): 
     pass
+
 
 if __name__ == '__main__':
     import interface

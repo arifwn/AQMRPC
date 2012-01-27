@@ -1,5 +1,7 @@
-from aqmrpc.rest.client import Connection
 import json
+
+from aqmrpc.rest.client import Connection
+
 
 if __name__ == '__main__':
     conn = Connection('http://api.twitter.com/1/statuses/')
