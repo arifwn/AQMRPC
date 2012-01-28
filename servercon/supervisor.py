@@ -18,8 +18,8 @@ _jobs = Queue.Queue()
 
 class Job(object):
     
-    def __init__(self, *args, **kwargs):
-        self.name = getattr(kwargs, 'name', None)
+    def __init__(self, name=None):
+        self.name = name
     
     def set_up(self):
         pass
@@ -33,8 +33,8 @@ class Job(object):
 
 class StopSupervisorJob(Job):
     
-    def __init__(self, *args, **kwargs):
-        super(StopSupervisorJob, self).__init__(*args, **kwargs)
+    def __init__(self, name=None):
+        super(StopSupervisorJob, self).__init__(name)
         if self.name is None:
             self.name = 'Stop Supervisor'
     

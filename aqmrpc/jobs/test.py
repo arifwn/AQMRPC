@@ -11,11 +11,11 @@ from servercon.supervisor import Job
 
 class TestJob(Job):
     
-    def __init__(self, *args, **kwargs):
-        super(TestJob, self).__init__(*args, **kwargs)
+    def __init__(self, name=None, data=None):
+        super(TestJob, self).__init__(name=name)
         if self.name is None:
             self.name = 'Test Job'
-        self.data = getattr(kwargs, 'data', None)
+        self.data = data
     
     def process(self):
         if self.data is None:

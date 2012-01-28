@@ -46,7 +46,7 @@ class Interface(aqm.Interface):
         return d
     
     def xmlrpc_test_async_job(self, data):
-        j = TestJob(str(data))
+        j = TestJob(data=str(data))
         supervisor.put_job(j)
         return True
     
