@@ -31,6 +31,9 @@ class Test(unittest.TestCase):
     
     def testAsyncJob(self):
         self.s.test_async_job('test for async job!')
+        self.s.test_async_job('test for async job 2!')
+        self.s.test_async_job('test for async job 3!')
+        self.s.test_async_job('test for async job 4!')
         self.assertEqual(1, 1)
 
 

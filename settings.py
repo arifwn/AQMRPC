@@ -7,6 +7,10 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
+DEFAULT_THREAD_POOL_SIZE = 20
+MODEL_THREAD_POOL_SIZE = 4
+DOWNLOADER_THREAD_POOL_SIZE = 4
+
 MANAGERS = ADMINS
 
 DATABASES = {
