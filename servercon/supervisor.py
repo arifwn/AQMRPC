@@ -40,7 +40,7 @@ class StopSupervisorJob(BaseJob):
     
     def process(self):
         global _supervisor
-        _supervisor.notify_stop()
+        _supervisor._notify_stop()
 
 
 class SupervisorThread(threading.Thread):
@@ -93,7 +93,7 @@ class SupervisorThread(threading.Thread):
         global _jobs
         _jobs.put(StopSupervisorJob())
     
-    def notify_stop(self):
+    def _notify_stop(self):
         self.running = False
     
 
