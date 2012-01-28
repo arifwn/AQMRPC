@@ -6,10 +6,10 @@ Created on Jan 28, 2012
 
 from twisted.python import log
 
-from servercon.supervisor import Job
+from servercon.supervisor import BaseJob
 
 
-class TestJob(Job):
+class TestJob(BaseJob):
     
     def __init__(self, name=None, data=None):
         super(TestJob, self).__init__(name=name)

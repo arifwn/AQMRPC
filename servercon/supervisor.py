@@ -16,7 +16,7 @@ _pool = None
 _jobs = Queue.Queue()
 
 
-class Job(object):
+class BaseJob(object):
     
     def __init__(self, name=None):
         self.name = name
@@ -31,7 +31,7 @@ class Job(object):
         pass
 
 
-class StopSupervisorJob(Job):
+class StopSupervisorJob(BaseJob):
     
     def __init__(self, name=None):
         super(StopSupervisorJob, self).__init__(name)
