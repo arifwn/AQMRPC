@@ -7,9 +7,10 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
-DEFAULT_THREAD_POOL_SIZE = 20
-MODEL_THREAD_POOL_SIZE = 4
-DOWNLOADER_THREAD_POOL_SIZE = 4
+THREAD_POOL_DEFAULT_SIZE = 20
+THREAD_POOL_CPUBOUND_SIZE = 4
+THREAD_POOL_NETBOUND_SIZE = 4 # separated from general IO since network proxy sometimes has limit on number of simultaneous connection
+THREAD_POOL_IOBOUND_SIZE = 4
 
 MANAGERS = ADMINS
 

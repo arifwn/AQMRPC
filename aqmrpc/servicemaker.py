@@ -21,20 +21,9 @@ from aqmrpc.interface import aqm
 from servercon import supervisor
 
 
-if hasattr(settings, 'RPCSERVER_DEFAULT_ADDR'):
-    DEFAULT_ADDR = settings.RPCSERVER_DEFAULT_ADDR
-else:
-    DEFAULT_ADDR = ''
-    
-if hasattr(settings, 'RPCSERVER_DEFAULT_PORT'):
-    DEFAULT_PORT = int(settings.RPCSERVER_DEFAULT_PORT)
-else:
-    DEFAULT_PORT = 8080
-    
-if hasattr(settings, 'DEBUG'):
-    DEBUG = settings.DEBUG
-else:
-    DEBUG = True
+DEBUG = getattr(settings, 'DEBUG', True)
+DEFAULT_ADDR = getattr(settings, 'RPCSERVER_DEFAULT_ADDR', '')
+DEFAULT_PORT = int(getattr(settings, 'RPCSERVER_DEFAULT_PORT', 8080))
 
 
 class Options(usage.Options):

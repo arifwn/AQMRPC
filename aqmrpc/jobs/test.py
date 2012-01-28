@@ -8,17 +8,13 @@ import time
 
 from twisted.python import log
 
-from servercon.supervisor import BaseJob, MODEL_POOL
+from servercon.supervisor import BaseJob, RUNNER_CPUBOUND
 
 
 class TestJob(BaseJob):
     
-    def __init__(self, name=None, runner=None, data=None):
+    def __init__(self, name='Test Job', runner=RUNNER_CPUBOUND, data=None):
         super(TestJob, self).__init__(name=name, runner=runner)
-        if self.name is None:
-            self.name = 'Test Job'
-        if self.runner is None:
-            self.runner = MODEL_POOL
         self.data = data
     
     def process(self):
