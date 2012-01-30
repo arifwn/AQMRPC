@@ -48,11 +48,11 @@ class AQMServiceMaker(object):
         sv.setServiceParent(multi)
         
         root = resource.Resource()
+        r = aqm.Interface()
         
         if DEBUG:
-            r = aqmtest.Interface()
-        else:
-            r = aqm.Interface()
+            r.putSubHandler('test', aqmtest.TestInterface())
+            
             
         xmlrpc.addIntrospection(r)
         root.putChild('RPC2', r)

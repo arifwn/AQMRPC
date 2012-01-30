@@ -16,7 +16,7 @@ class Test(unittest.TestCase):
     def testDefer(self):
         delay = 1
         message = 'this should return same string'
-        result = self.s.test_defer(delay, message)
+        result = self.s.test.defer(delay, message)
         self.assertEqual(message, result)
         
     def testBinary(self):
@@ -26,15 +26,21 @@ class Test(unittest.TestCase):
         with open(path, 'rb') as handle:
             bin = handle.read()
         
-        bin2 = self.s.test_get_binary(path).data
+        bin2 = self.s.test.get_binary(path).data
         self.assertEqual(len(bin), len(bin2))
     
     def testAsyncJob(self):
-        self.s.test_async_job('test for async job!')
-        self.s.test_async_job('test for async job 2!')
-        self.s.test_async_job('test for async job 3!')
-        self.s.test_async_job('test for async job 4!')
+        self.s.test.async_job('test for async job!')
+        self.s.test.async_job('test for async job 2!')
+        self.s.test.async_job('test for async job 3!')
+        self.s.test.async_job('test for async job 4!')
         self.assertEqual(1, 1)
+    
+    def testSubhandler(self):
+        test_s = 'another test!'
+        self.assertEqual(test_s, self.s.server.test_echo(test_s))
+        self.assertEqual(test_s, self.s.job.test_echo(test_s))
+        self.assertEqual(test_s, self.s.task.test_echo(test_s))
 
 
 if __name__ == "__main__":

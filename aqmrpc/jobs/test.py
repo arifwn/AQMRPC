@@ -18,8 +18,8 @@ class TestJob(BaseJob):
         self.data = data
     
     def process(self):
-        log.msg('invoking test job in 10 s...')
-        time.sleep(10)
+        log.msg('invoking test job in 5 s...')
+        time.sleep(5)
         if self.data is None:
             log.msg('test job invoked!')
         else:

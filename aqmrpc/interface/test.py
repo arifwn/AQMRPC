@@ -16,7 +16,7 @@ from aqmrpc.jobs.test import TestJob
 from servercon import supervisor
 
 
-class Interface(aqm.Interface):
+class TestInterface(aqm.Interface):
     
     def __init__(self):
         aqm.Interface.__init__(self)
@@ -28,8 +28,8 @@ class Interface(aqm.Interface):
         time.sleep(delay)
         return data
     
-    def xmlrpc_test_defer(self, delay, message):
-        ''' while block_5s() blocks for 5 seconds, deferToThread makes sure that
+    def xmlrpc_defer(self, delay, message):
+        ''' deferToThread makes sure that
         Twisted event loop do not get blocked'''
         d = threads.deferToThread(self.t_block_and_return, delay, message)
         return d
@@ -40,12 +40,12 @@ class Interface(aqm.Interface):
         with open(path, 'rb') as handle:
                 return xmlrpclib.Binary(handle.read())
             
-    def xmlrpc_test_get_binary(self, path):
+    def xmlrpc_get_binary(self, path):
         '''return binary data, use deferToThread so it doesn't block'''
         d = threads.deferToThread(self.t_return_binary, path)
         return d
     
-    def xmlrpc_test_async_job(self, data):
+    def xmlrpc_async_job(self, data):
         j = TestJob(data=str(data))
         supervisor.put_job(j)
         return True
