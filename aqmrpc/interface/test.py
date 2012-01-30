@@ -14,12 +14,13 @@ from twisted.python import threadpool
 from aqmrpc.interface import aqm
 from aqmrpc.jobs.test import TestJob
 from servercon import supervisor
+from aqmrpc.interface import with_request
 
 
 class TestInterface(aqm.Interface):
     
-    def __init__(self):
-        aqm.Interface.__init__(self)
+    def __init__(self, allowNone=False, useDateTime=True):
+        aqm.Interface.__init__(self, allowNone, useDateTime)
         self.pool = threadpool.ThreadPool()
     
     def t_block_and_return(self, delay, data):
@@ -28,7 +29,8 @@ class TestInterface(aqm.Interface):
         time.sleep(delay)
         return data
     
-    def xmlrpc_defer(self, delay, message):
+    @with_request
+    def xmlrpc_defer(self, request, delay, message):
         ''' deferToThread makes sure that
         Twisted event loop do not get blocked'''
         d = threads.deferToThread(self.t_block_and_return, delay, message)
@@ -39,13 +41,15 @@ class TestInterface(aqm.Interface):
         '''
         with open(path, 'rb') as handle:
                 return xmlrpclib.Binary(handle.read())
-            
-    def xmlrpc_get_binary(self, path):
+    
+    @with_request
+    def xmlrpc_get_binary(self, request, path):
         '''return binary data, use deferToThread so it doesn't block'''
         d = threads.deferToThread(self.t_return_binary, path)
         return d
     
-    def xmlrpc_async_job(self, data):
+    @with_request
+    def xmlrpc_async_job(self, request, data):
         j = TestJob(data=str(data))
         supervisor.put_job(j)
         return True

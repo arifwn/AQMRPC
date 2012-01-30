@@ -13,8 +13,8 @@ from twisted.python import threadpool
 
 class Interface(xmlrpc.XMLRPC):
     
-    def __init__(self):
-        xmlrpc.XMLRPC.__init__(self)
+    def __init__(self, allowNone=False, useDateTime=True):
+        xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
         
         self.server_handler = Server()
         self.putSubHandler('server', self.server_handler)
@@ -28,9 +28,6 @@ class Interface(xmlrpc.XMLRPC):
 
 class Server(xmlrpc.XMLRPC):
     
-    def xmlrpc_test_echo(self, s):
-        return s
-    
     def xmlrpc_all(self):
         return []
     
@@ -42,12 +39,15 @@ class Server(xmlrpc.XMLRPC):
     
     def xmlrpc_info(self, id):
         return []
+    
+    def xmlrpc_test_echo(self, s):
+        return s
     
 
 class Job(xmlrpc.XMLRPC):
     
-    def xmlrpc_test_echo(self, s):
-        return s
+    def xmlrpc_create(self, config):
+        return 'id'
     
     def xmlrpc_all(self):
         return []
@@ -60,13 +60,16 @@ class Job(xmlrpc.XMLRPC):
     
     def xmlrpc_info(self, id):
         return []
+    
+    def xmlrpc_test_echo(self, s):
+        return s
     
 
 class Task(xmlrpc.XMLRPC):
     
-    def xmlrpc_test_echo(self, s):
-        return s
-    
+    def xmlrpc_create(self, config):
+        return 'id'
+        
     def xmlrpc_all(self):
         return []
     
@@ -78,4 +81,16 @@ class Task(xmlrpc.XMLRPC):
     
     def xmlrpc_info(self, id):
         return []
+    
+    def xmlrpc_archive(self, id):
+        return True
+    
+    def xmlrpc_remove(self, id):
+        return True
+    
+    def xmlrpc_result(self, id):
+        return {'result': True}
+    
+    def xmlrpc_test_echo(self, s):
+        return s
     

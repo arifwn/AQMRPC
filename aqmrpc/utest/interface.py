@@ -8,7 +8,8 @@ import xmlrpclib
 
 
 class Test(unittest.TestCase):
-
+    '''Miscelaneous non-critical test. Server must be run with --debug=on'''
+    
     def setUp(self):
         self.s = xmlrpclib.ServerProxy('http://localhost:8080')
         self.s('transport').user_agent = 'Test Client 0.0.1'
@@ -30,6 +31,7 @@ class Test(unittest.TestCase):
         self.assertEqual(len(bin), len(bin2))
     
     def testAsyncJob(self):
+        '''this 4 job should be executed all at once in parallel'''
         self.s.test.async_job('test for async job!')
         self.s.test.async_job('test for async job 2!')
         self.s.test.async_job('test for async job 3!')
