@@ -8,6 +8,7 @@ import threading
 from twisted.application import service
 from twisted.python import log, threadpool
 from django.conf import settings
+from rest import client
 
 import Queue
 
@@ -47,9 +48,11 @@ _jobs = Queue.Queue()
 
 class BaseJob(object):
     
-    def __init__(self, name=None, runner=RUNNER_BLOCKING):
+    def __init__(self, name=None, runner=RUNNER_BLOCKING, callback=None):
         self.name = name
         self.runner = runner
+        self.callback_func = None
+        self.results = {}
     
     def set_up(self):
         pass
@@ -57,18 +60,48 @@ class BaseJob(object):
     def process(self):
         raise NotImplementedError()
     
+    def callback(self):
+        if self.callback_func is None:
+            return
+        
+        try:
+            self.callback_func(**self.results)
+        except Exception as e:
+            log.msg('[%s] callback exception: %s' % (self.__class__.name, e))
+            
+    
     def tear_down(self):
         pass
 
 
 class StopSupervisorJob(BaseJob):
     
-    def __init__(self, name='Stop Supervisor', runner=RUNNER_BLOCKING):
-        super(StopSupervisorJob, self).__init__(name=name, runner=runner)
+    def __init__(self, name='Stop Supervisor', runner=RUNNER_BLOCKING, callback=None):
+        super(StopSupervisorJob, self).__init__(name=name, runner=runner, callback=callback)
     
     def process(self):
         global _supervisor
         _supervisor._exit_thread()
+
+
+class Callback(object):
+    
+    def __call__(self, **kwargs):
+        raise NotImplementedError
+
+
+class RESTCallback(Callback):
+    
+    def __init__(self, base_url, resource, method='get', username=None, password=None):
+        self.base_url = base_url
+        self.resource = resource
+        self.username = username
+        self.password = password
+        self.method = method
+        
+    def __call__(self, **kwargs):
+        self.conn = client.Connection(self.base_url, self.username, self.password)
+        return self.conn.request(self.resource, self.method, kwargs.items(), headers={})
 
 
 class SupervisorThread(threading.Thread):
@@ -91,6 +124,7 @@ class SupervisorThread(threading.Thread):
         set_up = getattr(job, 'set_up', None)
         tear_down = getattr(job, 'tear_down', None)
         process = getattr(job, 'process', None)
+        callback = getattr(job, 'callback', None)
         log.msg('[runner] processing job: %s <%s>' % (job_name, job.__class__.__name__))
         
         if set_up is not None:
@@ -104,6 +138,13 @@ class SupervisorThread(threading.Thread):
                 process()
             except Exception as e:
                 log.err(e, '[runner] Exception in job process()')
+        
+        if callback is not None:
+            try:
+                callback()
+            except Exception as e:
+                log.err(e, '[runner] Exception in job callback()')
+        
     
         if tear_down is not None:
             try:

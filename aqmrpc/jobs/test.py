@@ -13,8 +13,8 @@ from servercon.supervisor import BaseJob, RUNNER_CPUBOUND
 
 class TestJob(BaseJob):
     
-    def __init__(self, name='Test Job', runner=RUNNER_CPUBOUND, data=None):
-        super(TestJob, self).__init__(name=name, runner=runner)
+    def __init__(self, name='Test Job', runner=RUNNER_CPUBOUND, data=None, callback=None):
+        super(TestJob, self).__init__(name=name, runner=runner, callback=callback)
         self.data = data
     
     def process(self):

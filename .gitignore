@@ -1,5 +1,6 @@
 *_thumb.jpg
 *.pyc
+.cache
 dropin.cache
 twistd.log
 twistd.pid
