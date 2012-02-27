@@ -6,6 +6,7 @@ Created on Feb 24, 2012
 
 import os
 from os import path
+import shutil
 
 from aqmrpc import settings
 
@@ -37,7 +38,5 @@ def setup(id):
 
 def cleanup(id):
     '''remove a modeling environment identified with id'''
-    success_flag = False
-    base = working_path(id)
+    shutil.rmtree(working_path(id))
     
-    return success_flag
