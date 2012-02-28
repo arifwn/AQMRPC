@@ -15,6 +15,9 @@ def working_path(id):
     '''return base path of the modeling environment identified with id''' 
     return path.join(settings.AQM_WORKING_DIR, id)
 
+def program_path(id, program):
+    return path.join(settings.AQM_WORKING_DIR, id, program)
+
 def setup(id):
     '''create a new modeling environment in AQM_WORKING_DIR location
     return model working path'''
