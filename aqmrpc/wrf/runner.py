@@ -16,24 +16,26 @@ import logging
 from os import path
 from cStringIO import StringIO
 
-file_buffer = None
+stdout_buffer = None
+stderr_buffer = None
 runner = None
 arguments = {}
 
 
 class ExecutableRunner(threading.Thread):
-    def __init__(self, target, rundir, file_output):
+    def __init__(self, target, rundir, stdout_buffer, stderr_buffer):
         threading.Thread.__init__(self)
         self.rundir = rundir
         self.target = target
-        self.file_output = file_output
+        self.stdout_buffer = stdout_buffer
+        self.stderr_buffer = stderr_buffer
         self.daemon = True
     
     def run(self):
-        self.child = subprocess.Popen([self.target], stderr=self.file_output, 
-                                      stdout=self.file_output, stdin=subprocess.PIPE)
+        self.child = subprocess.Popen([self.target], stderr=self.stdout_buffer, 
+                                      stdout=self.stderr_buffer, stdin=subprocess.PIPE)
         self.child.wait()
-        file_buffer.flush()
+        stdout_buffer.flush()
         logging.debug('runner finished')
     
     def terminate(self):
@@ -96,11 +98,13 @@ class ConnectionHandler(threading.Thread):
         logging.debug('connection closed')
 
 def process(command):
-    global file_buffer
+    global stdout_buffer
+    global stderr_buffer
     global arguments
     
     if command == 'flush_log':
-        file_buffer.flush()
+        stdout_buffer.flush()
+        stderr_buffer.flush()
         return 'ok'
     elif command == 'status':
         return json.dumps(arguments)
@@ -137,7 +141,8 @@ def daemonize():
 
         
 def cleanup(args):
-    global file_buffer
+    global stdout_buffer
+    global stderr_buffer
     socket_path = path.join(args.rundir, 'socket_ctrl')
     try:
         os.remove(socket_path)
@@ -148,20 +153,29 @@ def cleanup(args):
     except:
         pass
     try:
-        file_buffer.close()
+        stdout_buffer.flush()
+        stdout_buffer.close()
+    except:
+        pass
+        
+    try:
+        stderr_buffer.flush()
+        stderr_buffer.close()
     except:
         pass
         
 
 def runserver(args):
-    global file_buffer
+    global stdout_buffer
+    global stderr_buffer
     global runner
     
-    file_buffer = open('log.txt', 'w')
+    stdout_buffer = open('stdout.txt', 'w')
+    stderr_buffer = open('stderr.txt', 'w')
     logging.debug('rundir: %s' % args.rundir)
     logging.debug('target: %s' % args.target)
     
-    runner = ExecutableRunner(args.target, args.rundir, file_buffer)
+    runner = ExecutableRunner(args.target, args.rundir, stdout_buffer, stderr_buffer)
     runner.start()
     logging.debug('runner started')
     
@@ -193,11 +207,12 @@ if __name__ == '__main__':
     arguments['debug'] = args.debug
     
     os.chdir(args.rundir)
-    logging.basicConfig(filename='runner_log.txt',level=logging.DEBUG)
-    
     atexit.register(cleanup, args)
     
-    if not args.debug:
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(filename='runner_log.txt',level=logging.DEBUG)
         daemonize()
     
     runserver(args)
