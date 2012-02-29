@@ -6,6 +6,7 @@ Created on Feb 24, 2012
 
 import socket
 import os
+import json
 from os import path
 
 class Controller(object):
@@ -33,7 +34,11 @@ class Controller(object):
     @property
     def status(self):
         '''return running status of the model environment'''
-        raise NotImplementedError()
+        try:
+            stat = json.loads(self.send_command('status'))
+        except:
+            stat = None
+        return stat
     
     @property
     def ready(self):
