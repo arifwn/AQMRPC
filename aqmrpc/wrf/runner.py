@@ -7,6 +7,7 @@ Created on Feb 28, 2012
 import argparse
 import socket
 import os
+import sys
 import subprocess
 import atexit
 import threading
@@ -15,7 +16,7 @@ from os import path
 from cStringIO import StringIO
 
 file_buffer = None
-running = True
+runner = None
 arguments = {}
 
 
@@ -28,10 +29,36 @@ class ExecutableRunner(threading.Thread):
         self.daemon = True
     
     def run(self):
-        child = subprocess.Popen([self.target], stderr=self.file_output, stdout=self.file_output)
-        child.wait()
+        self.child = subprocess.Popen([self.target], stderr=self.file_output, stdout=self.file_output)
+        self.child.wait()
         file_buffer.flush()
         print 'runner finished'
+    
+    def terminate(self):
+        self.child.terminate()
+
+
+class ServerThread(threading.Thread):
+    def __init__(self, s):
+        threading.Thread.__init__(self)
+        self.socket = s
+        self.daemon = True
+    
+    def run(self):
+        while True:
+            print 'waiting for connection...'
+            self.socket.listen(3)
+            
+            try:
+                conn, addr = self.socket.accept()
+            except KeyboardInterrupt:
+                print 'exit'
+                exit()
+                
+            print 'connected'
+            handler = ConnectionHandler(conn, addr)
+            handler.start()
+        
 
 
 class ConnectionHandler(threading.Thread):
@@ -42,7 +69,7 @@ class ConnectionHandler(threading.Thread):
         self.daemon = True
     
     def run(self):
-        global running
+        global runner
         while 1:
             try:
                 command = self.conn.recv(1024)
@@ -53,8 +80,11 @@ class ConnectionHandler(threading.Thread):
             if not command: break
             print 'received:', command
             if command == 'exit':
-                running = False
                 self.conn.send('ok')
+                try:
+                    runner.terminate()
+                except:
+                    pass
                 break
             if command == 'close':
                 self.conn.send('ok')
@@ -75,12 +105,31 @@ def process(command):
     
     return 'error'
 
-def daemonize(flag):
-    print flag
-    if flag:
-        print 'demonized!'
-    else:
-        print 'not demonized!'
+def daemonize():
+    print 'demonized!'
+    try: 
+        pid = os.fork() 
+        if pid > 0:
+            sys.exit(0) 
+    except OSError, e: 
+        print >>sys.stderr, "fork #1 failed: %d (%s)" % (e.errno, e.strerror) 
+        sys.exit(1)
+
+    os.chdir("/") 
+    os.setsid() 
+    os.umask(0) 
+    
+    try: 
+        pid = os.fork() 
+        if pid > 0:
+            # exit from second parent, print eventual PID before
+            print "Daemon PID %d" % pid 
+            sys.exit(0) 
+    except OSError, e: 
+        print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror) 
+        sys.exit(1) 
+
+
         
 def cleanup(args):
     global file_buffer
@@ -97,7 +146,7 @@ def cleanup(args):
 
 def runserver(args):
     global file_buffer
-    global running
+    global runner
     
     os.chdir(args.rundir)
     file_buffer = open('log.txt', 'w')
@@ -116,23 +165,10 @@ def runserver(args):
     except:
         pass
     
-    running = True
     s.bind(socket_path)
-    while running:
-        print 'waiting for connection...'
-        s.listen(1)
-        
-        try:
-            conn, addr = s.accept()
-        except KeyboardInterrupt:
-            print 'exit'
-            exit()
-            
-        print 'connected'
-        handler = ConnectionHandler(conn, addr)
-        handler.start()
-        
-    print 'mainloop exit'
+    svr = ServerThread(s)
+    svr.start()
+    runner.join()    
         
 
 if __name__ == '__main__':
@@ -151,6 +187,8 @@ if __name__ == '__main__':
     
     atexit.register(cleanup, args)
     
-    daemonize(args.debug)
+    if not args.debug:
+        daemonize()
+    
     runserver(args)
     
