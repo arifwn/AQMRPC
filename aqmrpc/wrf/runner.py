@@ -12,6 +12,7 @@ import subprocess
 import atexit
 import threading
 import json
+import logging
 from os import path
 from cStringIO import StringIO
 
@@ -29,10 +30,11 @@ class ExecutableRunner(threading.Thread):
         self.daemon = True
     
     def run(self):
-        self.child = subprocess.Popen([self.target], stderr=self.file_output, stdout=self.file_output)
+        self.child = subprocess.Popen([self.target], stderr=self.file_output, 
+                                      stdout=self.file_output, stdin=subprocess.PIPE)
         self.child.wait()
         file_buffer.flush()
-        print 'runner finished'
+        logging.debug('runner finished')
     
     def terminate(self):
         self.child.terminate()
@@ -46,16 +48,16 @@ class ServerThread(threading.Thread):
     
     def run(self):
         while True:
-            print 'waiting for connection...'
+            logging.debug('waiting for connection...')
             self.socket.listen(3)
             
             try:
                 conn, addr = self.socket.accept()
             except KeyboardInterrupt:
-                print 'exit'
+                logging.debug('exit')
                 exit()
                 
-            print 'connected'
+            logging.debug('connected')
             handler = ConnectionHandler(conn, addr)
             handler.start()
         
@@ -74,11 +76,11 @@ class ConnectionHandler(threading.Thread):
             try:
                 command = self.conn.recv(1024)
             except KeyboardInterrupt:
-                print 'exit'
+                logging.debug('exit')
                 exit()
             
             if not command: break
-            print 'received:', command
+            logging.debug('received: %s' % command)
             if command == 'exit':
                 self.conn.send('ok')
                 try:
@@ -91,7 +93,7 @@ class ConnectionHandler(threading.Thread):
                 break
             self.conn.send(process(command))
         self.conn.close()
-        print 'connection closed'
+        logging.debug('connection closed')
 
 def process(command):
     global file_buffer
@@ -106,16 +108,15 @@ def process(command):
     return 'error'
 
 def daemonize():
-    print 'demonized!'
+    logging.debug('demonized!')
     try: 
         pid = os.fork() 
         if pid > 0:
             sys.exit(0) 
     except OSError, e: 
-        print >>sys.stderr, "fork #1 failed: %d (%s)" % (e.errno, e.strerror) 
+        logging.error('fork #1 failed: %d (%s)' % (e.errno, e.strerror)) 
         sys.exit(1)
 
-    os.chdir("/") 
     os.setsid() 
     os.umask(0) 
     
@@ -123,12 +124,16 @@ def daemonize():
         pid = os.fork() 
         if pid > 0:
             # exit from second parent, print eventual PID before
-            print "Daemon PID %d" % pid 
+            logging.debug('Daemon PID %d' % pid) 
             sys.exit(0) 
     except OSError, e: 
-        print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror) 
+        logging.error('fork #2 failed: %d (%s)' % (e.errno, e.strerror)) 
         sys.exit(1) 
-
+    
+    pid = str(os.getpid())
+    pid_file = open('pid.txt', 'w+')
+    pid_file.write(str(pid))
+    pid_file.close()
 
         
 def cleanup(args):
@@ -136,6 +141,10 @@ def cleanup(args):
     socket_path = path.join(args.rundir, 'socket_ctrl')
     try:
         os.remove(socket_path)
+    except:
+        pass
+    try:
+        os.remove('pid.txt')
     except:
         pass
     try:
@@ -148,14 +157,13 @@ def runserver(args):
     global file_buffer
     global runner
     
-    os.chdir(args.rundir)
     file_buffer = open('log.txt', 'w')
-    print 'rundir:', args.rundir
-    print 'target:', args.target
+    logging.debug('rundir: %s' % args.rundir)
+    logging.debug('target: %s' % args.target)
     
     runner = ExecutableRunner(args.target, args.rundir, file_buffer)
     runner.start()
-    print 'runner started'
+    logging.debug('runner started')
     
     socket_path = path.join(args.rundir, 'socket_ctrl')
     
@@ -172,7 +180,6 @@ def runserver(args):
         
 
 if __name__ == '__main__':
-    
     parser = argparse.ArgumentParser(description='Run target program as daemon.')
     parser.add_argument('--target', help='target executable')
     parser.add_argument('--rundir', help='run directory')
@@ -184,6 +191,9 @@ if __name__ == '__main__':
     arguments['rundir'] = args.rundir
     arguments['id'] = args.id
     arguments['debug'] = args.debug
+    
+    os.chdir(args.rundir)
+    logging.basicConfig(filename='runner_log.txt',level=logging.DEBUG)
     
     atexit.register(cleanup, args)
     
