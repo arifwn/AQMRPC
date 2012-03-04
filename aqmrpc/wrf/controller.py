@@ -24,7 +24,8 @@ class ModelEnvController(object):
         self.wrf_path = path.join(self.working_path, 'WRF/')
         self.arwpost_path = path.join(self.working_path, 'ARWpost/')
         self.wpp_path = path.join(self.working_path, 'WPP/')
-        r_path, mdl = path.split(environment.__file__)
+#        r_path, mdl = path.split(environment.__file__)
+        r_path = os.path.dirname(__file__) 
         self.runner_path = path.join(r_path, 'runner.py')
     
     def run_wrf(self):
