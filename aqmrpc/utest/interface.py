@@ -7,11 +7,24 @@ import unittest
 import xmlrpclib
 
 
+class SafeTransportWithCert(xmlrpclib.SafeTransport):
+    __cert_file = '../../cert/cert.pem'
+    __key_file  = '../../cert/key.pem'
+    
+    def make_connection(self,host):
+        host_with_cert = (host, {
+                      'key_file'  :  self.__key_file,
+                      'cert_file' :  self.__cert_file
+            } )
+        return xmlrpclib.SafeTransport.make_connection(self, host_with_cert)
+
+
 class Test(unittest.TestCase):
     '''Miscelaneous non-critical test. Server must be run with --debug=on'''
     
     def setUp(self):
-        self.s = xmlrpclib.ServerProxy('http://localhost:8080')
+        transport = SafeTransportWithCert()
+        self.s = xmlrpclib.ServerProxy('https://localhost:8080', transport)
         self.s('transport').user_agent = 'Test Client 0.0.1'
     
     def testDefer(self):
