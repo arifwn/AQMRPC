@@ -16,7 +16,7 @@ from aqmrpc import settings
 
 
 class ModelEnvController(object):
-    
+    '''provides api to interact with modeling environment'''
     def __init__(self, id):
         self.id = id
         self.working_path = environment.working_path(id)
