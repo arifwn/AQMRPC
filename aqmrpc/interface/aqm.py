@@ -5,6 +5,7 @@ Created on Jan 26, 2012
 '''
 import time
 import xmlrpclib
+import os
 from os import path
 
 from twisted.web import xmlrpc
@@ -137,25 +138,67 @@ class Filesystem(xmlrpc.XMLRPC):
         return path.join(wrfenv.working_path(envid), self.files[targetpath])
     
     def xmlrpc_write(self, envid, targetpath, content):
-        pass
-        
-    def xmlrpc_read(self, envid, targetpath):
+        '''
+        replace content in the target file.
+        create new file if not exist.
+        try to wrap content in xmlrpclib.Binary especially for binary content. 
+        '''
         if self.verify_input(envid, targetpath) is False:
             return None
         filepath = self.compute_path(envid, targetpath)
         
         try:
-            f = open(filepath, 'r')
+            f = open(filepath, 'wb')
+        except IOError:
+            return None
+        
+        if isinstance(content, xmlrpclib.Binary):
+            data = content.data
+        else:
+            data = content
+            
+        f.write(data)
+        f.close()
+        
+    def xmlrpc_read(self, envid, targetpath):
+        '''
+        return content of target file.
+        target file is treated as binary data (xmlrpclib.Binary)
+        '''
+        if self.verify_input(envid, targetpath) is False:
+            return None
+        filepath = self.compute_path(envid, targetpath)
+        
+        try:
+            f = open(filepath, 'rb')
         except IOError:
             return None
         data = f.read()
         f.close()
-        return data
+        return xmlrpclib.Binary(data)
     
-    def xmlrpc_stat(self, envid, targetpath):
-        pass
+    def xmlrpc_exist(self, envid, targetpath):
+        '''verify if file really exist'''
+        if self.verify_input(envid, targetpath) is False:
+            return False
+        filepath = self.compute_path(envid, targetpath)
+        
+        try:
+            os.stat(filepath)
+            return True
+        except OSError:
+            return False
     
-    def xmlrpc_rm(self, envid, targetpath):
-        pass
+    def xmlrpc_remove(self, envid, targetpath):
+        '''remove target file'''
+        if self.verify_input(envid, targetpath) is False:
+            return None
+        filepath = self.compute_path(envid, targetpath)
+        
+        try:
+            os.remove(filepath)
+        except OSError:
+            return
+        
     
     
