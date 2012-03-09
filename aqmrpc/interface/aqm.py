@@ -123,7 +123,7 @@ class Filesystem(xmlrpc.XMLRPC):
                       'ARWpost/namelist.ARWpost': 'ARWpost/namelist.ARWpost'}
     
     def verify_input(self, envid, targetpath):
-        '''verify is input is actually valid'''
+        '''verify if input is actually valid'''
         try:
             p = self.files[targetpath]
         except KeyError:

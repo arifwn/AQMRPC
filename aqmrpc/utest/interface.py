@@ -8,8 +8,12 @@ import xmlrpclib
 
 
 class SafeTransportWithCert(xmlrpclib.SafeTransport):
-    __cert_file = '../../cert/cert.pem'
-    __key_file  = '../../cert/key.pem'
+    
+    def __init__(self, use_datetime=1):
+        xmlrpclib.SafeTransport.__init__(self, use_datetime)
+        self.__cert_file = '../../cert/cert.pem'
+        self.__key_file  = '../../cert/key.pem'
+        self.user_agent = 'Test Client 0.0.1'
     
     def make_connection(self,host):
         host_with_cert = (host, {
@@ -25,7 +29,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         transport = SafeTransportWithCert()
         self.s = xmlrpclib.ServerProxy('https://localhost:8080', transport)
-        self.s('transport').user_agent = 'Test Client 0.0.1'
+#        self.s('transport').user_agent = 'Test Client 0.0.1'
     
     def testDefer(self):
         delay = 1
