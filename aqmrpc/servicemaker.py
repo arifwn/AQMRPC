@@ -23,6 +23,7 @@ from twisted.python import log
 
 from aqmrpc.interface import test as aqmtest
 from aqmrpc.interface import aqm
+from aqmrpc import settings as aqmsettings
 from servercon import supervisor
 
 
@@ -95,15 +96,15 @@ class AQMServiceMaker(object):
             r.putSubHandler('test', aqmtest.TestInterface())
         
         # setup ssl context
-        myContextFactory = ssl.DefaultOpenSSLContextFactory('cert/key.pem',
-                                                            'cert/cert.pem')
+        myContextFactory = ssl.DefaultOpenSSLContextFactory(aqmsettings.AQM_CERT_KEY,
+                                                            aqmsettings.AQM_CERT_CERT)
         ctx = myContextFactory.getContext()
         ctx.set_verify(SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
                        verifyCallback)
         
         # Since we have self-signed certs we have to explicitly
         # tell the server to trust them.
-        ctx.load_verify_locations('cert/cacert.pem')
+        ctx.load_verify_locations(aqmsettings.AQM_CERT_CACERT)
         
         xmlrpc.addIntrospection(r)
         root.putChild('RPC2', r)
