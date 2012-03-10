@@ -35,12 +35,12 @@ class ExecutableRunner(threading.Thread):
         self.name = 'RunnerThread'
     
     def run(self):
-        logging.info('runner start')
+        logging.info('target start')
         self.child = subprocess.Popen([self.target], stderr=self.stderr_buffer, 
                                       stdout=self.stdout_buffer, stdin=subprocess.PIPE)
         self.child.wait()
         stdout_buffer.flush()
-        logging.info('runner finished')
+        logging.info('target finished')
     
     def terminate(self):
         '''terminate child process'''
@@ -203,7 +203,6 @@ def runserver(args):
     
     runner = ExecutableRunner(args.target, args.rundir, stdout_buffer, stderr_buffer)
     runner.start()
-    logging.info('runner started')
     
     socket_path = path.join(args.rundir, args.socket)
     
@@ -260,12 +259,16 @@ if __name__ == '__main__':
     os.chdir(args.rundir)
     atexit.register(cleanup, args)
     
-    logformat = '%(asctime)-15s [%(levelname)s] [%(threadName)s] [%(module)s] [line %(lineno)d] %(message)s'
+    logformat = '%(asctime)-15s [%(levelname)-7s] [%(threadName)-12s] [%(module)s] [line %(lineno)-4d] %(message)s'
     if args.debug:
         logging.basicConfig(level=logging.DEBUG, format=logformat)
     else:
         logging.basicConfig(filename=args.runnerlog, level=logging.DEBUG, format=logformat)
-        daemonize(args.pidfile)
     
+    logging.info('runner started')
+    if args.debug is False:
+        daemonize(args.pidfile)
+        
     runserver(args)
+    logging.info('runner finished')
     

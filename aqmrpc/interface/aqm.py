@@ -119,9 +119,11 @@ class Filesystem(xmlrpc.XMLRPC):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
         
         # whitelisted files
-        self.files = {'WRF/namelist.input': 'WRF/namelist.input',
+        self.files = {
+                      'WRF/namelist.input': 'WRF/namelist.input',
                       'WPS/namelist.wps': 'WPS/namelist.wps',
-                      'ARWpost/namelist.ARWpost': 'ARWpost/namelist.ARWpost'}
+                      'ARWpost/namelist.ARWpost': 'ARWpost/namelist.ARWpost',
+        }
     
     def verify_input(self, envid, targetpath):
         '''verify if input is actually valid'''

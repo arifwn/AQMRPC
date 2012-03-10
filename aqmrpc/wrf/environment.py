@@ -35,7 +35,7 @@ def setup(id):
     return model working path'''
     base = working_path(id)
     
-    # TODO: recursively create symlinks to all items in AQM_MODEL_DIR
+    # recursively create symlinks to all items in AQM_MODEL_DIR
     master_path = path.join(settings.AQM_MODEL_DIR, 'WRF')
     if not path.exists(master_path):
         raise Exception('invalid AQM_MODEL_DIR setting')
