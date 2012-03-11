@@ -6,9 +6,16 @@ Created on Jan 22, 2012
 
 import unittest
 
+from aqmrpc.net.xmlrpc import Client
 
-class Test(unittest.TestCase):
+
+class WRFEnvTest(unittest.TestCase):
     
-    def testDummy(self):
-        self.assertEqual(1, 1)
-        
+    def setUp(self):
+        self.client = Client('https://localhost:8080')
+    
+    def testCreateEnv(self):
+        self.assertIsNotNone(self.client.wrf.setupenv())
+    
+    def testCleanupEnv(self):
+        self.assertIsNotNone(self.client.wrf.cleanupenv('1'), True)

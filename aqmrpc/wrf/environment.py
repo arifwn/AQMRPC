@@ -42,9 +42,10 @@ def setup(envid):
     
     try:
         os.stat(base)
-    except OSError:
         # environment with specified id is already exist
         return False
+    except OSError:
+        pass
     
     master_tree = os.walk(master_path)
     os.mkdir(base)
@@ -59,5 +60,8 @@ def setup(envid):
 
 def cleanup(envid):
     '''remove a modeling environment identified with id'''
-    shutil.rmtree(working_path(envid))
+    try:
+        shutil.rmtree(working_path(envid))
+    except OSError:
+        pass
     

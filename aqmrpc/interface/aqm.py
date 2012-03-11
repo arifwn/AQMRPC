@@ -32,6 +32,9 @@ class Interface(xmlrpc.XMLRPC):
         
         self.filesystem_handler = Filesystem()
         self.putSubHandler('filesystem', self.filesystem_handler)
+        
+        self.wrf_handler = WRF()
+        self.putSubHandler('wrf', self.wrf_handler)
 
 
 class Server(xmlrpc.XMLRPC):
@@ -54,13 +57,13 @@ class Server(xmlrpc.XMLRPC):
     def xmlrpc_test_echo(self, s):
         return s
     
-
-class Job(xmlrpc.XMLRPC):
+    
+class WRF(xmlrpc.XMLRPC):
     
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
         
-    def xmlrpc_setupenv(self, config):
+    def xmlrpc_setupenv(self):
         envdata = WRFEnvironment()
         envdata.save()
         envid = str(envdata.id)
@@ -75,11 +78,19 @@ class Job(xmlrpc.XMLRPC):
     def xmlrpc_cleanupenv(self, envid):
         try:
             envdata = WRFEnvironment.objects.get(id=int(envid))
+            envdata.env_setup = False
+            envdata.save()
         except WRFEnvironment.DoesNotExist:
             return False
         wrfenv.cleanup(envid)
         return True
+
+
+class Job(xmlrpc.XMLRPC):
     
+    def __init__(self, allowNone=True, useDateTime=True):
+        xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
+        
     def xmlrpc_all(self):
         return []
     
