@@ -13,6 +13,7 @@ from twisted.internet import threads, reactor, defer
 from twisted.python import threadpool
 
 from aqmrpc.wrf import environment as wrfenv
+from aqmrpc.models import WRFEnvironment
 
 
 class Interface(xmlrpc.XMLRPC):
@@ -59,8 +60,25 @@ class Job(xmlrpc.XMLRPC):
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
         
-    def xmlrpc_create(self, config):
-        return 'id'
+    def xmlrpc_setupenv(self, config):
+        envdata = WRFEnvironment()
+        envdata.save()
+        envid = str(envdata.id)
+        result = wrfenv.setup(envid)
+        if result:
+            envdata.env_setup = True
+            envdata.save()
+            return envid
+        else:
+            return None
+    
+    def xmlrpc_cleanupenv(self, envid):
+        try:
+            envdata = WRFEnvironment.objects.get(id=int(envid))
+        except WRFEnvironment.DoesNotExist:
+            return False
+        wrfenv.cleanup(envid)
+        return True
     
     def xmlrpc_all(self):
         return []
@@ -68,10 +86,10 @@ class Job(xmlrpc.XMLRPC):
     def xmlrpc_filter(self, **kwargs):
         return []
     
-    def xmlrpc_status(self, id):
+    def xmlrpc_status(self, envid):
         return []
     
-    def xmlrpc_info(self, id):
+    def xmlrpc_info(self, envid):
         return []
     
     def xmlrpc_test_echo(self, s):
