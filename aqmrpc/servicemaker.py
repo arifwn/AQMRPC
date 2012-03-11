@@ -6,6 +6,8 @@ Created on Jan 24, 2012
 import os
 import xmlrpclib
 
+from OpenSSL import SSL
+
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.conf import settings
 
@@ -16,9 +18,12 @@ from twisted.plugin import IPlugin
 from twisted.application.service import IServiceMaker
 from twisted.application import internet, service
 from twisted.web import server, resource, xmlrpc
+from twisted.internet import ssl
+from twisted.python import log
 
 from aqmrpc.interface import test as aqmtest
 from aqmrpc.interface import aqm
+from aqmrpc import settings as aqmsettings
 from servercon import supervisor
 
 
@@ -38,6 +43,7 @@ class Options(usage.Options):
 
 
 class SiteFactory(server.Site):
+    '''Customized logging format'''
     
     def log(self, request):
         """
@@ -57,7 +63,14 @@ class SiteFactory(server.Site):
                 self._escape(request.getHeader("user-agent") or "-"))
             self.logFile.write(line)
 
-    
+
+def verifyCallback(connection, x509, errnum, errdepth, ok):
+    if not ok:
+        log.msg('invalid cert from subject: %s' % x509.get_subject())
+        return False
+    else:
+        return True
+ 
 
 class AQMServiceMaker(object):
     implements(IServiceMaker, IPlugin)
@@ -81,15 +94,27 @@ class AQMServiceMaker(object):
         if DEBUG == 'on':
             # Starting server with --debug=on
             r.putSubHandler('test', aqmtest.TestInterface())
-            
-            
+        
+        # setup ssl context
+        myContextFactory = ssl.DefaultOpenSSLContextFactory(aqmsettings.AQM_CERT_KEY,
+                                                            aqmsettings.AQM_CERT_CERT)
+        ctx = myContextFactory.getContext()
+        ctx.set_verify(SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+                       verifyCallback)
+        
+        # Since we have self-signed certs we have to explicitly
+        # tell the server to trust them.
+        ctx.load_verify_locations(aqmsettings.AQM_CERT_CACERT)
+        
         xmlrpc.addIntrospection(r)
         root.putChild('RPC2', r)
         
-#        main_site = server.Site(root)
         main_site = SiteFactory(root)
-        ws = internet.TCPServer(int(options["port"]), main_site, 
+        ws = internet.SSLServer(int(options["port"]), main_site,
+                                myContextFactory,
                                 interface=options['address'])
+#        ws = internet.TCPServer(int(options["port"]), main_site, 
+#                                interface=options['address'])
         
         # add the web server service to the multi service
         ws.setServiceParent(multi)

@@ -11,19 +11,31 @@ import shutil
 from aqmrpc import settings
 
 
-def working_path(id):
-    '''return base path of the modeling environment identified with id''' 
-    return path.join(settings.AQM_WORKING_DIR, id)
+def verify_id(envid):
+    '''check if given environment id is actually valid and exist'''
+    if ('.' in envid) or ('/' in envid):
+        # suspicious id
+        return False
+    envpath = working_path(envid) 
+    try:
+        os.stat(envpath)
+        return True
+    except OSError:
+        return False
 
-def program_path(id, program):
-    return path.join(settings.AQM_WORKING_DIR, id, program)
+def working_path(envid):
+    '''return base path of the modeling environment identified with id''' 
+    return path.join(settings.AQM_WORKING_DIR, envid)
+
+def program_path(envid, program):
+    return path.join(settings.AQM_WORKING_DIR, envid, program)
 
 def setup(id):
     '''create a new modeling environment in AQM_WORKING_DIR location
     return model working path'''
     base = working_path(id)
     
-    # TODO: recursively create symlinks to all items in AQM_MODEL_DIR
+    # recursively create symlinks to all items in AQM_MODEL_DIR
     master_path = path.join(settings.AQM_MODEL_DIR, 'WRF')
     if not path.exists(master_path):
         raise Exception('invalid AQM_MODEL_DIR setting')
