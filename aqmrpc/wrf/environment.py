@@ -12,10 +12,7 @@ from aqmrpc import settings
 
 
 def verify_id(envid):
-    '''check if given environment id is actually valid and exist'''
-    if ('.' in envid) or ('/' in envid):
-        # suspicious id
-        return False
+    '''Check if given environment id is actually valid and exist.'''
     envpath = working_path(envid) 
     try:
         os.stat(envpath)
@@ -24,20 +21,26 @@ def verify_id(envid):
         return False
 
 def working_path(envid):
-    '''return base path of the modeling environment identified with id''' 
-    return path.join(settings.AQM_WORKING_DIR, envid)
+    '''Return base path of the modeling environment identified with id.''' 
+    return path.join(settings.AQM_WORKING_DIR, str(envid))
 
 def program_path(envid, program):
-    return path.join(settings.AQM_WORKING_DIR, envid, program)
+    return path.join(settings.AQM_WORKING_DIR, str(envid), program)
 
 def compute_path(envid, targetpath):
-    '''compute the real absolute path from environmental id and target path'''
-    return path.join(working_path(envid), targetpath)
+    '''Compute the real absolute path from environmental id and target path.'''
+    return path.join(working_path(str(envid)), targetpath)
+
+def get_geog_path():
+    '''Return path to geog data.'''
+    return path.join(settings.AQM_MODEL_DIR, 'WRF_DATA/geog')
     
 def setup(envid):
-    '''create a new modeling environment in AQM_WORKING_DIR location
-    return model working path'''
-    base = working_path(envid)
+    '''
+    Create a new modeling environment in AQM_WORKING_DIR location.
+    Return model working path.
+    '''
+    base = working_path(str(envid))
     
     # recursively create symlinks to all items in AQM_MODEL_DIR
     master_path = path.join(settings.AQM_MODEL_DIR, 'WRF')
@@ -63,9 +66,9 @@ def setup(envid):
     return True
 
 def cleanup(envid):
-    '''remove a modeling environment identified with id'''
+    '''Remove a modeling environment identified with id.'''
     try:
-        shutil.rmtree(working_path(envid))
+        shutil.rmtree(working_path(str(envid)))
     except OSError:
         pass
     

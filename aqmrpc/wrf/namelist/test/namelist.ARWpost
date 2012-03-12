@@ -1,0 +1,20 @@
+&datetime 
+ start_date                            = '2010-01-14_00:00:00',
+ end_date                              = '2010-01-15_00:00:00',
+ interval_seconds                      = 3600,
+ tacc                                  = 0,
+ debug_level                           = 0,
+/ 
+ 
+&io 
+ input_root_name                       = './wrfout_d01_2010-01-14_00:00:00',
+ output_root_name                      = './d03',
+ plot                                  = 'basic',
+ mercator_defs                         = .true.,
+/ 
+ 
+&interp 
+ interp_method                         = 0,
+ interp_levels                         = 1000.0, 950.0, 900.0, 850.0, 800.0, 750.0, 700.0, 650.0, 600.0, 550.0, 500.0, 450.0, 400.0, 350.0, 300.0, 250.0, 200.0, 150.0, 100.0,
+/ 
+ 

@@ -6,11 +6,11 @@ Created on Jan 26, 2012
 import time
 import xmlrpclib
 import os
-from os import path
+import os.path
+import glob
 
 from twisted.web import xmlrpc
-from twisted.internet import threads, reactor, defer
-from twisted.python import threadpool
+from twisted.python import log
 
 from aqmrpc.wrf import environment as wrfenv
 from aqmrpc.models import WRFEnvironment
@@ -65,11 +65,32 @@ class WRF(xmlrpc.XMLRPC):
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
         
-    def xmlrpc_setupenv(self):
-        envdata = WRFEnvironment()
-        envdata.save()
-        envid = str(envdata.id)
-        result = wrfenv.setup(envid)
+    def xmlrpc_setupenv(self, envid=None):
+        ''' 
+        Create a new modeling environment. 
+        If envid is specified (integer), attempt to open existing id
+        Return environment id on success, and None if failed
+        '''
+        log.msg('[rpc] wrf.setupenv() params: envid=%s' % envid)
+        if envid is None:
+            # create a new environment
+            envdata = WRFEnvironment()
+            envdata.save()
+            envid = envdata.id
+            result = wrfenv.setup(envid)
+        else:
+            # try to open existing environment
+            try:
+                envdata = WRFEnvironment.objects.get(id=envid)
+            except WRFEnvironment.DoesNotExist:
+                return None
+            
+            # create the environment if it is not there
+            result = wrfenv.setup(envid)
+            if (not result) and envdata.env_setup:
+                # environment already exist
+                return envid
+                
         if result:
             envdata.env_setup = True
             envdata.save()
@@ -78,14 +99,82 @@ class WRF(xmlrpc.XMLRPC):
             return None
     
     def xmlrpc_cleanupenv(self, envid):
+        ''' Delete modeling environment. Return False on error '''
+        log.msg('[rpc] wrf.cleanupenv() params: envid=%s' % envid)
         try:
-            envdata = WRFEnvironment.objects.get(id=int(envid))
+            envdata = WRFEnvironment.objects.get(id=envid)
             envdata.env_setup = False
             envdata.save()
         except WRFEnvironment.DoesNotExist:
             return False
         wrfenv.cleanup(envid)
         return True
+    
+    def xmlrpc_set_namelist(self, envid, program, namelist_str):
+        '''
+        Set namelist file for coresponding program (WRF, WPS, ARWpost).
+        This function will perform necessary replacement to fit the namelist 
+        into specified modeling environment
+        ''' 
+        log.msg('[rpc] wrf.set_namelist() params: envid=%s program=%s' % (envid, program))
+        
+        program_list = ['WPS', 'WRF', 'ARWpost']
+        if program not in program_list:
+            raise Exception('Invalid Program')
+        
+        from aqmrpc.wrf.namelist import decode, encode
+        
+        parsed_namelist = decode.decode_namelist_string(namelist_str)
+        if program == 'WPS':
+            filepath = os.path.join(wrfenv.program_path(envid, program), 'namelist.wps')
+            parsed_namelist['geogrid']['geog_data_path'][0] = wrfenv.get_geog_path()
+        elif program == 'WRF':
+            filepath = os.path.join(wrfenv.program_path(envid, program), 'namelist.input')
+        elif program == 'ARWpost':
+            filepath = os.path.join(wrfenv.program_path(envid, program), 'namelist.ARWpost')
+            
+        namelist_str_new = encode.encode_namelist(parsed_namelist)
+        
+        # save to file
+        filepath = wrfenv.compute_path(envid, filepath)
+        
+        try:
+            f = open(filepath, 'wb')
+        except IOError:
+            return None
+            
+        f.write(namelist_str_new)
+        f.close()
+    
+    def xmlrpc_cleanup_wps(self, envid):
+        ''' Remove temporary files from WPS working directory '''
+        log.msg('[rpc] wrf.cleanup_wps() params: envid=%s' % envid)
+        
+        wps_dir = wrfenv.compute_path(envid, 'WPS')
+        
+        #cleanup gribfiles
+        gribfiles = glob.glob(os.path.join(wps_dir, 'GRIBFILE.*'))
+        for gribfile in gribfiles:
+            os.remove(gribfile)
+        
+        #cleanup geogrid
+        geo_ems = glob.glob(os.path.join(wps_dir, 'geo_em.*'))
+        for geo_em in geo_ems:
+            os.remove(geo_em)
+        
+        #cleanup ungrib
+        ugfiles = glob.glob(os.path.join(wps_dir, 'FILE:*'))
+        for ugfile in ugfiles:
+            os.remove(ugfile)
+        
+        ugpfiles = glob.glob(os.path.join(wps_dir, 'PFILE:*'))
+        for ugpfile in ugpfiles:
+            os.remove(ugpfile)
+        
+        #cleanup metgrid
+        met_ems = glob.glob(os.path.join(wps_dir, 'met_em.*'))
+        for met_em in met_ems:
+            os.remove(met_em)
     
 
 class Job(xmlrpc.XMLRPC):
@@ -163,6 +252,8 @@ class Filesystem(xmlrpc.XMLRPC):
         create new file if not exist.
         try to wrap content in xmlrpclib.Binary especially for binary content. 
         '''
+        log.msg('[rpc] filesystem.write() params: envid=%s targetpath=%s' % (envid, targetpath))
+        
         if self.verify_input(envid, targetpath) is False:
             return None
         filepath = wrfenv.compute_path(envid, targetpath)
@@ -185,6 +276,8 @@ class Filesystem(xmlrpc.XMLRPC):
         return content of target file.
         target file is treated as binary data (xmlrpclib.Binary)
         '''
+        log.msg('[rpc] filesystem.read() params: envid=%s targetpath=%s' % (envid, targetpath))
+        
         if self.verify_input(envid, targetpath) is False:
             return None
         filepath = wrfenv.compute_path(envid, targetpath)
@@ -199,9 +292,11 @@ class Filesystem(xmlrpc.XMLRPC):
     
     def xmlrpc_exist(self, envid, targetpath):
         '''verify if file really exist'''
+        log.msg('[rpc] filesystem.exist() params: envid=%s targetpath=%s' % (envid, targetpath))
+        
         if self.verify_input(envid, targetpath) is False:
             return False
-        filepath = wrfenv.compute_path(envid, self.files[targetpath])
+        filepath = wrfenv.compute_path(envid, targetpath)
         
         try:
             os.stat(filepath)
@@ -211,9 +306,11 @@ class Filesystem(xmlrpc.XMLRPC):
     
     def xmlrpc_remove(self, envid, targetpath):
         '''remove target file'''
+        log.msg('[rpc] filesystem.remove() params: envid=%s targetpath=%s' % (envid, targetpath))
+        
         if self.verify_input(envid, targetpath) is False:
             return None
-        filepath = wrfenv.compute_path(envid, self.files[targetpath])
+        filepath = wrfenv.compute_path(envid, targetpath)
         
         try:
             os.remove(filepath)
