@@ -44,15 +44,19 @@ class WRFEnvTest(unittest.TestCase):
     def testWPSNamelist(self):
         '''Test creation of WPS Namelist file'''
         from aqmrpc.wrf import environment as wrfenv
-        from aqmrpc.wrf.namelist import misc
+        from aqmrpc.wrf.namelist import decode, encode
         
-        with open(os.path.join(os.path.dirname(misc.__file__),'test/namelist.wps'), 'rb') as f:
+        with open(os.path.join(os.path.dirname(decode.__file__),'test/namelist.wps'), 'rb') as f:
             namelist_str = f.read()
         
         self.client.wrf.set_namelist(self.envid, 'WPS', namelist_str)
         with open(os.path.join(wrfenv.program_path(self.envid, 'WPS'), 'namelist.wps'), 'rb') as f:
             namelist_new_str = f.read()
-        self.assertEqual(namelist_new_str, namelist_str)
+        
+        parsed_namelist = decode.decode_namelist_string(namelist_str)
+        parsed_namelist['geogrid']['geog_data_path'][0] = wrfenv.get_geog_path()
+        
+        self.assertEqual(namelist_new_str, encode.encode_namelist(parsed_namelist))
     
     def testWRFNamelist(self):
         '''Test creation of WRF Namelist file'''
