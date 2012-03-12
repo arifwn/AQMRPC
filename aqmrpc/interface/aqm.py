@@ -86,7 +86,7 @@ class WRF(xmlrpc.XMLRPC):
             return False
         wrfenv.cleanup(envid)
         return True
-
+    
 
 class Job(xmlrpc.XMLRPC):
     
@@ -148,27 +148,14 @@ class Filesystem(xmlrpc.XMLRPC):
     
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
-        
-        # whitelisted files
-        self.files = {
-                      'WRF/namelist.input': 'WRF/namelist.input',
-                      'WPS/namelist.wps': 'WPS/namelist.wps',
-                      'ARWpost/namelist.ARWpost': 'ARWpost/namelist.ARWpost',
-        }
     
     def verify_input(self, envid, targetpath):
         '''verify if input is actually valid'''
-        try:
-            p = self.files[targetpath]
-        except KeyError:
-            # not in whitelist, so it's not valid
-            return False
         
-        return wrfenv.verify_id(envid)
-    
-    def compute_path(self, envid, targetpath):
-        '''compute the real absolute path from environmental id and target path'''
-        return path.join(wrfenv.working_path(envid), self.files[targetpath])
+        if wrfenv.verify_id(envid):
+            return filesystem.path_inside(wrfenv.working_path(envid), wrfenv.compute_path(envid, targetpath))
+        else:
+            return False
     
     def xmlrpc_write(self, envid, targetpath, content):
         '''
@@ -178,7 +165,7 @@ class Filesystem(xmlrpc.XMLRPC):
         '''
         if self.verify_input(envid, targetpath) is False:
             return None
-        filepath = self.compute_path(envid, targetpath)
+        filepath = wrfenv.compute_path(envid, targetpath)
         
         try:
             f = open(filepath, 'wb')
@@ -200,7 +187,7 @@ class Filesystem(xmlrpc.XMLRPC):
         '''
         if self.verify_input(envid, targetpath) is False:
             return None
-        filepath = self.compute_path(envid, targetpath)
+        filepath = wrfenv.compute_path(envid, targetpath)
         
         try:
             f = open(filepath, 'rb')
@@ -214,7 +201,7 @@ class Filesystem(xmlrpc.XMLRPC):
         '''verify if file really exist'''
         if self.verify_input(envid, targetpath) is False:
             return False
-        filepath = self.compute_path(envid, targetpath)
+        filepath = wrfenv.compute_path(envid, self.files[targetpath])
         
         try:
             os.stat(filepath)
@@ -226,7 +213,7 @@ class Filesystem(xmlrpc.XMLRPC):
         '''remove target file'''
         if self.verify_input(envid, targetpath) is False:
             return None
-        filepath = self.compute_path(envid, targetpath)
+        filepath = wrfenv.compute_path(envid, self.files[targetpath])
         
         try:
             os.remove(filepath)

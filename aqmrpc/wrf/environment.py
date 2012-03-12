@@ -30,6 +30,10 @@ def working_path(envid):
 def program_path(envid, program):
     return path.join(settings.AQM_WORKING_DIR, envid, program)
 
+def compute_path(envid, targetpath):
+    '''compute the real absolute path from environmental id and target path'''
+    return path.join(working_path(envid), targetpath)
+    
 def setup(envid):
     '''create a new modeling environment in AQM_WORKING_DIR location
     return model working path'''
