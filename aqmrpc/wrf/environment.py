@@ -8,7 +8,7 @@ import os
 from os import path
 import shutil
 
-from aqmrpc import settings
+from aqmrpc import settings as aqmsettings
 from aqmrpc.models import WRFEnvironment
 
 
@@ -16,8 +16,28 @@ class EnvironmentNotSetup(Exception):
     pass
 
 
+class FileNotFound(Exception):
+    pass
+
+
 class Env(object):
-    ''' Provides access to modeling environment '''
+    '''
+    Provides access to modeling environment.
+    
+    Usage:
+    * create / remove environment
+      e = Env()
+      e.setup() #creates the environment
+      e.cleanup() #removes the environment
+    
+    * running model
+      e = Env(5) #open existing environment with id=5
+      #create wps namelist from namelist_string
+      e.set_namelist('WPS', namelist_string) 
+      e.prepare_wps() #link necessary meteorology files
+      e.run_wps() #run the WPS
+      e.cleanup_wps() #removes temporary files from WPS dir
+    '''
     
     DoesNotExist = WRFEnvironment.DoesNotExist
     
@@ -105,12 +125,85 @@ class Env(object):
         f.write(namelist_str_new)
         f.close()
     
+    def get_namelist_data(self, program):
+        '''Return parsed namelist data for the specified program.'''
+        if not self.verify():
+            raise EnvironmentNotSetup()
+        
+        program_list = ['WPS', 'WRF', 'ARWpost']
+        if program not in program_list:
+            raise Exception('Invalid Program')
+        
+        from aqmrpc.wrf.namelist.decode import decode_namelist
+        
+        if program == 'WPS':
+            filepath = os.path.join(self.program_path(program), 'namelist.wps')
+        elif program == 'WRF':
+            filepath = os.path.join(self.program_path(program), 'namelist.input')
+        elif program == 'ARWpost':
+            filepath = os.path.join(self.program_path(program), 'namelist.ARWpost')
+        
+        namelist_data = decode_namelist(filepath)
+        return namelist_data
+        
     def prepare_wps(self):
-        '''Prepare all necessary wps data'''
+        '''Prepare all necessary wps data.'''
         # TODO: finish this method
+        from aqmrpc.wrf.namelist.misc import parse_date_string
+        
+        # read the namelist to determine time periods
+        namelist_data = self.get_namelist_data('WPS')
+        start_date = parse_date_string(namelist_data['share']['start_date'][0])
+        end_date = parse_date_string(namelist_data['share']['end_date'][0])
+        
+        # convert the periods into a list of file name
+        fnl_list = generate_fnl_list(start_date, end_date)
+        fnl_dir = os.path.join(aqmsettings.AQM_CACHE_DIR, 'fnl')
+#        all_good = True
+        fnl_path_list = []
+        
+        for filename in fnl_list:
+            fnl_path = os.path.join(fnl_dir, filename)
+            fnl_path_list.append(fnl_path)
+            
+            # check if files available in the cache directory
+            try:
+                os.stat(fnl_path)
+            except OSError:
+                raise FileNotFound(filename)
+        
+        # if all required files available, create symlinks to those files
+        wps_path = self.program_path('WPS')
+        for i, fnl_path in enumerate(fnl_path_list):
+            filename = get_gribfile_name(i)
+            os.symlink(fnl_path, os.path.join(wps_path, filename))
+        
+        # TODO: when file not found in local cache, check the remote cache 
+        #       if AQM_REMOTE_CACHE set
+        # if available in remote cache, copy those files to local cache
+        #   and create symlinks to those files
+    
+    def run_wps(self):
+        '''Run WPS'''
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        if not c.run_wps_ungrib():
+            print 'error running ungrib'
+            return False
+        
+        if not c.run_wps_geogrid():
+            print 'error running geogrid'
+            return False
+        
+        if not c.run_wps_metgrid():
+            print 'error running metgrid'
+            return False
+        
+        return True
     
     def cleanup_wps(self):
-        ''' Remove temporary files from WPS working directory '''
+        '''Remove temporary files from WPS working directory '''
         if not self.verify():
             raise EnvironmentNotSetup()
         import glob
@@ -155,7 +248,8 @@ class Env(object):
         # symlink met_em.* files
         met_ems = glob.glob(os.path.join(wps_dir, 'met_em.*'))
         for met_em in met_ems:
-            os.symlink(met_em, wrf_dir)
+            filename = os.path.basename(met_em)
+            os.symlink(met_em, os.path.join(wrf_dir, filename))
     
     def cleanup_wrf(self):
         '''Remove temporary files from WRF working directory '''
@@ -188,7 +282,7 @@ def verify_id(envid):
 
 def working_path(envid):
     '''Return base path of the modeling environment identified with id.''' 
-    return path.join(settings.AQM_WORKING_DIR, str(envid))
+    return path.join(aqmsettings.AQM_WORKING_DIR, str(envid))
 
 def program_path(envid, program):
     return path.join(working_path(str(envid)), program)
@@ -199,7 +293,7 @@ def compute_path(envid, targetpath):
 
 def get_geog_path():
     '''Return path to geog data.'''
-    return path.join(settings.AQM_MODEL_DIR, 'WRF_DATA/geog')
+    return path.join(aqmsettings.AQM_MODEL_DIR, 'WRF_DATA/geog')
     
 def setup(envid):
     '''
@@ -209,7 +303,7 @@ def setup(envid):
     base = working_path(str(envid))
     
     # recursively create symlinks to all items in AQM_MODEL_DIR
-    master_path = path.join(settings.AQM_MODEL_DIR, 'WRF')
+    master_path = path.join(aqmsettings.AQM_MODEL_DIR, 'WRF')
     if not path.exists(master_path):
         raise Exception('invalid AQM_MODEL_DIR setting')
     
@@ -237,4 +331,37 @@ def cleanup(envid):
         shutil.rmtree(working_path(str(envid)))
     except OSError:
         pass
+
+def generate_fnl_list(start, end):
+    '''Return a list of fnl filename from given datetime objects'''
+    import datetime
+    oneday = datetime.timedelta(1)
+    end = end + oneday # round up the end time by one day
     
+    start = datetime.datetime(start.year, start.month, start.day)
+    end = datetime.datetime(end.year, end.month, end.day)
+    dt = end - start
+    n_files = int((dt.total_seconds() / (6 * 60 * 60)) + 1)
+    
+    template = 'fnl_{:04d}{:02d}{:02d}_{:02d}_00_c'
+    
+    filenames = []
+    
+    for i in xrange(n_files):
+        filedate = start + datetime.timedelta(0, (i * (6 * 60 * 60)))
+        filename = template.format(filedate.year, filedate.month, filedate.day, filedate.hour)
+        filenames.append(filename)
+    
+    return filenames
+
+def get_gribfile_name(i):
+    '''Return GRIBFILE.AAA for i=0, GRIBFILE.AAB for i=1 and so on...'''
+    alpha = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 
+             'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z')
+    n = len(alpha)
+    i3 = alpha[i % n]
+    i2 = alpha[(i / n) % n]
+    i1 = alpha[i / (n ** 2)]
+    
+    name = 'GRIBFILE.%s%s%s' % (i1, i2, i3)
+    return name

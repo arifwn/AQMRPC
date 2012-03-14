@@ -51,4 +51,7 @@ def get_string(value):
         s_out = "'%s'" % value
     return s_out
 
-    
+def parse_date_string(datestring):
+    import datetime
+    return datetime.datetime.strptime(datestring, '%Y-%m-%d_%H:%M:%S')
+

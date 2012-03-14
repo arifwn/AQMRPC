@@ -17,9 +17,9 @@ from aqmrpc import settings
 
 class ModelEnvController(object):
     '''provides api to interact with modeling environment'''
-    def __init__(self, id):
-        self.id = id
-        self.working_path = environment.working_path(id)
+    def __init__(self, envid):
+        self.envid = str(envid)
+        self.working_path = environment.working_path(self.envid)
         self.wps_path = path.join(self.working_path, 'WPS/')
         self.wrf_path = path.join(self.working_path, 'WRF/')
         self.arwpost_path = path.join(self.working_path, 'ARWpost/')
@@ -27,12 +27,41 @@ class ModelEnvController(object):
         r_path = os.path.dirname(__file__) 
         self.runner_path = path.join(r_path, 'runner.py')
         
+        # WRF
         self.wrf_socket_name = 'wrf_socket_ctrl'
         self.wrf_socket_path = path.join(self.wrf_path, self.wrf_socket_name)
         self.wrf_stdout_log = path.join(self.wrf_path, 'wrf_stdout.txt')
         self.wrf_stderr_log = path.join(self.wrf_path, 'wrf_stderr.txt')
         self.wrf_runner_log = path.join(self.wrf_path, 'wrf_runner_log.txt')
+        self.wrf_log = path.join(self.wrf_path, 'wrf.log')
         self.wrf_pid_file = path.join(self.wrf_path, 'wrf_pid.txt')
+        
+        # WPS UNGRIB
+        self.wps_ungrib_socket_name = 'ungrib_socket_ctrl'
+        self.wps_ungrib_socket_path = path.join(self.wps_path, self.wps_ungrib_socket_name)
+        self.wps_ungrib_stdout_log = path.join(self.wps_path, 'ungrib_stdout.txt')
+        self.wps_ungrib_stderr_log = path.join(self.wps_path, 'ungrib_stderr.txt')
+        self.wps_ungrib_runner_log = path.join(self.wps_path, 'ungrib_runner_log.txt')
+        self.wps_ungrib_log = path.join(self.wps_path, 'ungrib.log')
+        self.wps_ungrib_pid_file = path.join(self.wps_path, 'ungrib_pid.txt')
+        
+        # WPS GEOGRID
+        self.wps_geogrid_socket_name = 'ungrib_socket_ctrl'
+        self.wps_geogrid_socket_path = path.join(self.wps_path, self.wps_geogrid_socket_name)
+        self.wps_geogrid_stdout_log = path.join(self.wps_path, 'geogrid_stdout.txt')
+        self.wps_geogrid_stderr_log = path.join(self.wps_path, 'geogrid_stderr.txt')
+        self.wps_geogrid_runner_log = path.join(self.wps_path, 'geogrid_runner_log.txt')
+        self.wps_geogrid_log = path.join(self.wps_path, 'geogrid.log')
+        self.wps_geogrid_pid_file = path.join(self.wps_path, 'geogrid_pid.txt')
+        
+        # WPS METGRID
+        self.wps_metgrid_socket_name = 'metgrid_socket_ctrl'
+        self.wps_metgrid_socket_path = path.join(self.wps_path, self.wps_metgrid_socket_name)
+        self.wps_metgrid_stdout_log = path.join(self.wps_path, 'metgrid_stdout.txt')
+        self.wps_metgrid_stderr_log = path.join(self.wps_path, 'metgrid_stderr.txt')
+        self.wps_metgrid_runner_log = path.join(self.wps_path, 'metgrid_runner_log.txt')
+        self.wps_metgrid_log = path.join(self.wps_path, 'metgrid.log')
+        self.wps_metgrid_pid_file = path.join(self.wps_path, 'metgrid_pid.txt')
     
     def wait(self, socket_path):
         '''wait until runner finished'''
@@ -43,10 +72,6 @@ class ModelEnvController(object):
                 controller.wait()
                 break
             time.sleep(0.5)
-    
-    def check_wrf_result(self):
-        '''check whether wrf run successfully'''
-        return False
     
     def run(self, **kwargs):
         subprocess.call([settings.AQM_PYTHON_BIN, self.runner_path, 
@@ -81,7 +106,104 @@ class ModelEnvController(object):
     def wrf_is_running(self):
         '''check whether wrf job is running by checking the pid file'''
         return check_pidfile(self.wrf_pid_file)
+    
+    def check_wrf_result(self):
+        '''check whether wrf run successfully'''
+        return True
+    
+    def run_wps_ungrib(self):
+        '''
+        Run ungrib and wait until its completion.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
         
+        self.run(rundir=self.wps_path, 
+                 target='./ungrib.exe', 
+                 socket=self.wps_ungrib_socket_path,
+                 stdout=self.wps_ungrib_stdout_log, 
+                 stderr=self.wps_ungrib_stderr_log,
+                 runnerlog=self.wps_ungrib_runner_log,
+                 pidfile=self.wps_ungrib_pid_file,
+                 id='ungrib')
+        
+        return self.check_wps_ungrib_result()
+    
+    def wps_ungrib_is_running(self):
+        '''check whether ungrib job is running by checking the pid file'''
+        return check_pidfile(self.wps_ungrib_pid_file)
+    
+    def check_wps_ungrib_result(self):
+        '''check whether ungrib run successfully'''
+        tag = '*** Successful completion of program ungrib.exe ***'
+        with open(self.wps_ungrib_log, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
+    
+    def run_wps_geogrid(self):
+        '''
+        Run geogrid and wait until its completion.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
+        
+        self.run(rundir=self.wps_path, 
+                 target='./geogrid.exe', 
+                 socket=self.wps_geogrid_socket_path,
+                 stdout=self.wps_geogrid_stdout_log, 
+                 stderr=self.wps_geogrid_stderr_log,
+                 runnerlog=self.wps_geogrid_runner_log,
+                 pidfile=self.wps_geogrid_pid_file,
+                 id='geogrid')
+        
+        return self.check_wps_geogrid_result()
+    
+    def wps_geogrid_is_running(self):
+        '''check whether geogrid job is running by checking the pid file'''
+        return check_pidfile(self.wps_ungrib_pid_file)
+    
+    def check_wps_geogrid_result(self):
+        '''check whether geogrid run successfully'''
+        tag = '*** Successful completion of program geogrid.exe ***'
+        with open(self.wps_geogrid_log, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
+    
+    def run_wps_metgrid(self):
+        '''
+        Run metgrid and wait until its completion.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
+        
+        self.run(rundir=self.wps_path, 
+                 target='./metgrid.exe', 
+                 socket=self.wps_metgrid_socket_path,
+                 stdout=self.wps_metgrid_stdout_log, 
+                 stderr=self.wps_metgrid_stderr_log,
+                 runnerlog=self.wps_metgrid_runner_log,
+                 pidfile=self.wps_metgrid_pid_file,
+                 id='metgrid')
+        
+        return self.check_wps_metgrid_result()
+    
+    def wps_metgrid_is_running(self):
+        '''check whether metgrid job is running by checking the pid file'''
+        return check_pidfile(self.wps_metgrid_pid_file)
+    
+    def check_wps_metgrid_result(self):
+        '''check metgrid metgrid run successfully'''
+        tag = '*** Successful completion of program metgrid.exe ***'
+        with open(self.wps_metgrid_log, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
+    
 
 class Controller(object):
     '''provides api to interact with runner'''
