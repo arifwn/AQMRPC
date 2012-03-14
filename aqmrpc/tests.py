@@ -63,7 +63,7 @@ class WRFEnvTest(unittest.TestCase):
         from aqmrpc.wrf import environment as wrfenv
         from aqmrpc.wrf.namelist import misc
         
-        with open(os.path.join(os.path.dirname(misc.__file__),'test/namelist.input'), 'rb') as f:
+        with open(os.path.join(os.path.dirname(misc.__file__), 'test/namelist.input'), 'rb') as f:
             namelist_str = f.read()
         
         self.client.wrf.set_namelist(self.envid, 'WRF', namelist_str)
