@@ -152,17 +152,17 @@ class WRF(xmlrpc.XMLRPC):
         
         wps_dir = wrfenv.compute_path(envid, 'WPS')
         
-        #cleanup gribfiles
+        # cleanup gribfiles
         gribfiles = glob.glob(os.path.join(wps_dir, 'GRIBFILE.*'))
         for gribfile in gribfiles:
             os.remove(gribfile)
         
-        #cleanup geogrid
+        # cleanup geogrid
         geo_ems = glob.glob(os.path.join(wps_dir, 'geo_em.*'))
         for geo_em in geo_ems:
             os.remove(geo_em)
         
-        #cleanup ungrib
+        # cleanup ungrib
         ugfiles = glob.glob(os.path.join(wps_dir, 'FILE:*'))
         for ugfile in ugfiles:
             os.remove(ugfile)
@@ -171,10 +171,12 @@ class WRF(xmlrpc.XMLRPC):
         for ugpfile in ugpfiles:
             os.remove(ugpfile)
         
-        #cleanup metgrid
-        met_ems = glob.glob(os.path.join(wps_dir, 'met_em.*'))
-        for met_em in met_ems:
-            os.remove(met_em)
+        # cleanup metgrid
+        # I don't think the metgrid files count as temporary files as we need
+        # them when running wrf
+#        met_ems = glob.glob(os.path.join(wps_dir, 'met_em.*'))
+#        for met_em in met_ems:
+#            os.remove(met_em)
     
 
 class Job(xmlrpc.XMLRPC):

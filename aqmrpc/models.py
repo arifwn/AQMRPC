@@ -7,8 +7,26 @@ Created on Jan 22, 2012
 from django.db import models
 
 class WRFEnvironment(models.Model):
-    running = models.BooleanField(default=False)
-    error = models.BooleanField(default=False)
-    finished = models.BooleanField(default=False)
+    # last step that successfully run
+    last_step = models.TextField(blank=True)
     
+    # current step
+    current_step = models.TextField(blank=True)
+    
+    # is current step is running?
+    running = models.BooleanField(default=False)
+    
+    # is current step is in error state?
+    error = models.BooleanField(default=False)
+    
+    # is modeling environment is setup correctly?
     env_setup = models.BooleanField(default=False)
+
+    def reset(self):
+        ''' reset all state '''
+        self.last_step = ''
+        self.current_step = ''
+        self.running = False
+        self.error = False
+        self.env_setup = False
+        
