@@ -16,4 +16,6 @@ AQM_CERT_CERT = getattr(settings, 'AQM_CERT_CERT', './cert/cert.pem')
 AQM_CERT_KEY = getattr(settings, 'AQM_CERT_KEY', './cert/key.pem')
 AQM_CERT_CACERT = getattr(settings, 'AQM_CERT_CACERT', './cert/cacert.pem')
 AQM_CACHE_DIR = getattr(settings, 'AQM_CACHE_DIR', os.path.join(AQM_MODEL_DIR, 'WRF_DATA/cache'))
-AQM_REMOTE_CACHE = getattr(settings, 'AQM_REMOTE_CACHE', None)
+
+# can be http or ftp, should be none if no remote cache configured
+AQM_REMOTE_CACHE = getattr(settings, 'AQM_REMOTE_CACHE', 'ftp://localhost/upload/cache/')

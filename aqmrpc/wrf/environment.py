@@ -5,8 +5,9 @@ Created on Feb 24, 2012
 '''
 
 import os
-from os import path
+import urllib
 import shutil
+from os import path
 
 from aqmrpc import settings as aqmsettings
 from aqmrpc.models import WRFEnvironment
@@ -147,7 +148,13 @@ class Env(object):
         return namelist_data
         
     def prepare_wps(self):
-        '''Prepare all necessary wps data.'''
+        '''
+        Prepare all necessary wps data.
+        
+        Possible exceptions:
+        * FileNotFound()
+          Required files not found in cache repository
+        '''
         # TODO: finish this method
         from aqmrpc.wrf.namelist.misc import parse_date_string
         
@@ -159,7 +166,6 @@ class Env(object):
         # convert the periods into a list of file name
         fnl_list = generate_fnl_list(start_date, end_date)
         fnl_dir = os.path.join(aqmsettings.AQM_CACHE_DIR, 'fnl')
-#        all_good = True
         fnl_path_list = []
         
         for filename in fnl_list:
@@ -169,8 +175,21 @@ class Env(object):
             # check if files available in the cache directory
             try:
                 os.stat(fnl_path)
+                fnl_exist = True
             except OSError:
+                fnl_exist = False
+            
+            if (not fnl_exist) and (aqmsettings.AQM_REMOTE_CACHE is not None):
+                # attemp to download the file from remote cache to local cache
+                network_path = '%s/fnl/%s' % (aqmsettings.AQM_REMOTE_CACHE, filename)
+                try:
+                    urllib.urlretrieve(network_path, fnl_path)
+                except IOError:
+                    raise FileNotFound(filename)
+            else:
+                # no remote cache configured
                 raise FileNotFound(filename)
+                
         
         # if all required files available, create symlinks to those files
         wps_path = self.program_path('WPS')
