@@ -33,7 +33,7 @@
  auxinput6_interval_m                  = 1440, 60, 60,
  auxinput7_interval_m                  = 1440, 60, 60,
  auxinput8_interval_m                  = 1440, 60, 60,
- auxinput1_inname                      = '"met_em.d<domain>.<date>"',
+ auxinput1_inname                      = 'met_em.d<domain>.<date>',
  auxinput6_inname                      = 'wrfbiochemi_d01',
  auxinput7_inname                      = 'wrffirechemi_d<domain>',
  auxinput8_inname                      = 'wrfchemi_gocart_bg_d<domain>',

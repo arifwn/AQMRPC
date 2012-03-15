@@ -27,13 +27,20 @@ class ModelEnvController(object):
         r_path = os.path.dirname(__file__) 
         self.runner_path = path.join(r_path, 'runner.py')
         
+        # WRF Real
+        self.wrf_real_socket_name = 'real_socket_ctrl'
+        self.wrf_real_socket_path = path.join(self.wrf_path, self.wrf_real_socket_name)
+        self.wrf_real_stdout_log = path.join(self.wrf_path, 'real_stdout.txt')
+        self.wrf_real_stderr_log = path.join(self.wrf_path, 'real_stderr.txt')
+        self.wrf_real_runner_log = path.join(self.wrf_path, 'real_runner_log.txt')
+        self.wrf_real_pid_file = path.join(self.wrf_path, 'real_pid.txt')
+        
         # WRF
         self.wrf_socket_name = 'wrf_socket_ctrl'
         self.wrf_socket_path = path.join(self.wrf_path, self.wrf_socket_name)
         self.wrf_stdout_log = path.join(self.wrf_path, 'wrf_stdout.txt')
         self.wrf_stderr_log = path.join(self.wrf_path, 'wrf_stderr.txt')
         self.wrf_runner_log = path.join(self.wrf_path, 'wrf_runner_log.txt')
-        self.wrf_log = path.join(self.wrf_path, 'wrf.log')
         self.wrf_pid_file = path.join(self.wrf_path, 'wrf_pid.txt')
         
         # WPS UNGRIB
@@ -66,12 +73,12 @@ class ModelEnvController(object):
     def wait(self, socket_path):
         '''wait until runner finished'''
         controller = Controller(socket_path)
-        for i in range(5):
+        for i in range(10):
             if controller.connect():
                 # now wait until runner finished
                 controller.wait()
                 break
-            time.sleep(0.5)
+            time.sleep(1)
     
     def run(self, **kwargs):
         subprocess.call([settings.AQM_PYTHON_BIN, self.runner_path, 
@@ -85,6 +92,59 @@ class ModelEnvController(object):
                          '--id', kwargs['id']])
         
         self.wait(kwargs['socket'])
+        
+        # sleep for a while to make sure files opened by runner
+        # has been closed properly
+        time.sleep(5)
+    
+    def resume(self, socket_path):
+        '''Resume wait for the specified runner'''
+        self.wait(socket_path)
+        
+        # sleep for a while to make sure files opened by runner
+        # has been closed properly
+        time.sleep(5)
+    
+    
+    def run_wrf_real(self):
+        '''
+        Run real and wait until its completion.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
+        
+        self.run(rundir=self.wrf_path, 
+                 target='./real.exe', 
+                 socket=self.wrf_real_socket_path,
+                 stdout=self.wrf_real_stdout_log, 
+                 stderr=self.wrf_real_stderr_log,
+                 runnerlog=self.wrf_real_runner_log,
+                 pidfile=self.wrf_real_pid_file,
+                 id='real')
+        
+        return self.check_wrf_real_result()
+    
+    def resume_wrf_real(self):
+        '''
+        Reconnect to running wrf real.exe session.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
+        self.resume(self.wrf_real_socket_path)
+        return self.check_wrf_real_result()
+    
+    def wrf_real_is_running(self):
+        '''check whether real.exe job is running by checking the pid file'''
+        return check_pidfile(self.wrf_real_pid_file)
+    
+    def check_wrf_real_result(self):
+        '''check whether real.exe run successfully'''
+        tag = 'SUCCESS COMPLETE REAL_EM INIT'
+        with open(self.wrf_real_stdout_log, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
+    
     
     def run_wrf(self):
         '''
@@ -103,13 +163,27 @@ class ModelEnvController(object):
         
         return self.check_wrf_result()
     
+    def resume_wrf(self):
+        '''
+        Reconnect to running wrf session.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
+        self.resume(self.wrf_socket_path)
+        return self.check_wrf_result()
+    
     def wrf_is_running(self):
         '''check whether wrf job is running by checking the pid file'''
         return check_pidfile(self.wrf_pid_file)
     
     def check_wrf_result(self):
         '''check whether wrf run successfully'''
-        return True
+        tag = 'SUCCESS COMPLETE WRF'
+        with open(self.wrf_stdout_log, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
     
     def run_wps_ungrib(self):
         '''

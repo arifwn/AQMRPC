@@ -208,15 +208,12 @@ class Env(object):
         c = ModelEnvController(self.envid)
         
         if not c.run_wps_ungrib():
-            print 'error running ungrib'
             return False
         
         if not c.run_wps_geogrid():
-            print 'error running geogrid'
             return False
         
         if not c.run_wps_metgrid():
-            print 'error running metgrid'
             return False
         
         return True
@@ -270,6 +267,19 @@ class Env(object):
             filename = os.path.basename(met_em)
             os.symlink(met_em, os.path.join(wrf_dir, filename))
     
+    def run_wrf(self):
+        '''Run WRF'''
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        if not c.run_wrf_real():
+            return False
+        
+        if not c.run_wrf():
+            return False
+        
+        return True
+    
     def cleanup_wrf(self):
         '''Remove temporary files from WRF working directory '''
         if not self.verify():
@@ -284,6 +294,33 @@ class Env(object):
             os.remove(met_em)
         
         # TODO: more cleanup here...
+    
+    def get_running_operation(self):
+        '''Return running operation (WPS, WRF, etc...'''
+    
+    def update_database(self):
+        '''
+        Update database model state with the real environment state.
+        Used to synchronize state in the event that AQMRPC server killed
+        or restarted but child job (which run outside of AQMRPC instance)
+        finished successfully or still running.
+        '''
+    
+    def resume_wrf(self):
+        '''
+        Reconnect to running WRF runner.
+        If WRF runner is not running, return the result of runner immediately.
+        '''
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        if not c.resume_wrf_real():
+            return False
+        
+        if not c.resume_wrf():
+            return False
+        
+        return True
     
     def render(self):
         '''Render model result with ARWpost'''
