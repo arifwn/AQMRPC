@@ -294,9 +294,25 @@ class Env(object):
             os.remove(met_em)
         
         # TODO: more cleanup here...
+        
+    def run_arwpost(self):
+        '''ARWpost and produce grads files'''
+        # get the number of domains
+        # for each domain:
+        #   set input_root_name in namelist.ARWpost to appropriate wrfout file
+        #   set output_root_name to appropriate domain name
+        #   run arwpost
+        
+    def render_grads(self):
+        '''Render all produced grads files into a set of png files'''
+        # TODO: put some algorithm here...
     
-    def get_running_operation(self):
+    def get_running_operation(self, first_check=None):
         '''Return running operation (WPS, WRF, etc...'''
+        # check ungrib, geogrid, metgrid, real, wrf, arwpost to see 
+        # which one is running
+        # if first_check is specified, check start at that one instead of
+        # ungrib
     
     def update_database(self):
         '''
