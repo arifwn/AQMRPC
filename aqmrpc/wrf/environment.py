@@ -207,13 +207,39 @@ class Env(object):
         from aqmrpc.wrf.controller import ModelEnvController
         c = ModelEnvController(self.envid)
         
+        # run ungrib
+        self.envdata.current_step = 'ungrib'
+        self.envdata.running = True
+        self.envdata.error = False
+        self.envdata.save()
         if not c.run_wps_ungrib():
+            self.envdata.running = False
+            self.envdata.error = True
+            self.envdata.save()
             return False
         
+        # run geogrid
+        self.envdata.last_step = 'ungrib'
+        self.envdata.current_step = 'geogrid'
+        self.envdata.running = True
+        self.envdata.error = False
+        self.envdata.save()
         if not c.run_wps_geogrid():
+            self.envdata.running = False
+            self.envdata.error = True
+            self.envdata.save()
             return False
         
+        # run metgrid
+        self.envdata.last_step = 'geogrid'
+        self.envdata.current_step = 'metgrid'
+        self.envdata.running = True
+        self.envdata.error = False
+        self.envdata.save()
         if not c.run_wps_metgrid():
+            self.envdata.running = False
+            self.envdata.error = True
+            self.envdata.save()
             return False
         
         return True
@@ -272,10 +298,27 @@ class Env(object):
         from aqmrpc.wrf.controller import ModelEnvController
         c = ModelEnvController(self.envid)
         
+        # run real
+        self.envdata.current_step = 'real'
+        self.envdata.running = True
+        self.envdata.error = False
+        self.envdata.save()
         if not c.run_wrf_real():
+            self.envdata.running = False
+            self.envdata.error = True
+            self.envdata.save()
             return False
         
+        # run wrf
+        self.envdata.last_step = 'real'
+        self.envdata.current_step = 'wrf'
+        self.envdata.running = True
+        self.envdata.error = False
+        self.envdata.save()
         if not c.run_wrf():
+            self.envdata.running = False
+            self.envdata.error = True
+            self.envdata.save()
             return False
         
         return True
@@ -322,6 +365,46 @@ class Env(object):
         finished successfully or still running.
         '''
     
+    def resume_wps(self):
+        '''
+        Reconnect to running WPS runner.
+        If WPS runner is not running, return the result of runner immediately.
+        '''
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        if (self.envdata.current_step == 'ungrib') and \
+           (self.envdata.running == True):
+            # try to resume real.exe
+            if not c.resume_wrf_real():
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+            # continue to WRF
+            self.envdata.last_step = 'real'
+            self.envdata.current_step = 'wrf'
+            self.envdata.running = True
+            self.envdata.error = False
+            self.envdata.save()
+            if not c.run_wrf():
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+        elif (self.envdata.current_step == 'wrf') and \
+           (self.envdata.running == True):
+            # try to resume wrf
+            if not c.resume_wrf():
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+        
+        return True
+    
     def resume_wrf(self):
         '''
         Reconnect to running WRF runner.
@@ -330,11 +413,35 @@ class Env(object):
         from aqmrpc.wrf.controller import ModelEnvController
         c = ModelEnvController(self.envid)
         
-        if not c.resume_wrf_real():
-            return False
-        
-        if not c.resume_wrf():
-            return False
+        if (self.envdata.current_step == 'real') and \
+           (self.envdata.running == True):
+            # try to resume real.exe
+            if not c.resume_wrf_real():
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+            # continue to WRF
+            self.envdata.last_step = 'real'
+            self.envdata.current_step = 'wrf'
+            self.envdata.running = True
+            self.envdata.error = False
+            self.envdata.save()
+            if not c.run_wrf():
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+        elif (self.envdata.current_step == 'wrf') and \
+           (self.envdata.running == True):
+            # try to resume wrf
+            if not c.resume_wrf():
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
         
         return True
     
