@@ -1,0 +1,13 @@
+[
+    {
+        "pk": 1,
+        "model": "aqmrpc.wrfenvironment",
+        "fields": {
+            "current_step": "",
+            "running": false,
+            "last_step": "",
+            "env_setup": false,
+            "error": false
+        }
+    }
+]

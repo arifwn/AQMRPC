@@ -121,7 +121,7 @@ class Env(object):
         try:
             f = open(filepath, 'wb')
         except IOError:
-            return None
+            return
             
         f.write(namelist_str_new)
         f.close()
@@ -186,7 +186,8 @@ class Env(object):
                     urllib.urlretrieve(network_path, fnl_path)
                 except IOError:
                     raise FileNotFound(filename)
-            else:
+            elif not fnl_exist:
+                # file not in cache directory and no remote cache configured
                 # no remote cache configured
                 raise FileNotFound(filename)
                 

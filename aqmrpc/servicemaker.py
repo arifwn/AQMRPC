@@ -70,7 +70,18 @@ def verifyCallback(connection, x509, errnum, errdepth, ok):
         return False
     else:
         return True
- 
+
+#def startup_processing():
+#    '''Performs early checks before starting the server'''
+#    from aqmrpc.models import WRFEnvironment
+#    
+#    # id number 1 is used for testing purpose. Make sure it already exist
+#    try:
+#        envdata = WRFEnvironment.objects.get(id=1)
+#    except WRFEnvironment.DoesNotExist:
+#        envdata = WRFEnvironment(id=1)
+#        envdata.save()
+
 
 class AQMServiceMaker(object):
     implements(IServiceMaker, IPlugin)
@@ -83,6 +94,9 @@ class AQMServiceMaker(object):
         
         # make a new MultiService to hold the thread/web services
         multi = service.MultiService()
+        
+        # performs some startup preparation
+#        startup_processing()
         
         # make a new SupervisorService and add it to the multi service
         sv = supervisor.SupervisorService()

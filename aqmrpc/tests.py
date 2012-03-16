@@ -7,17 +7,26 @@ Created on Jan 22, 2012
 import os
 import unittest
 
-from aqmrpc.net.xmlrpc import Client
 
-
-class WRFEnvTest(unittest.TestCase):
-    '''Run RPC Server before running this test'''
+class RPCBehaviorTest(unittest.TestCase):
+    '''
+    Test behavior of the RPC Server.
+    Run RPC Server before running this test.
+    '''
     
     def setUp(self):
+        from aqmrpc.net.xmlrpc import Client
+        
         # WARNING: this test use envid = 1
         self.envid = 1
         
         self.client = Client('https://localhost:8080')
+        
+        # check if rpc server is up and running
+        
+        test_str = 'The rabbit has escaped!'
+        self.client.server.test_echo(test_str)
+        
         envid = self.client.wrf.setupenv(self.envid)
         if envid is None:
             envid = self.client.wrf.setupenv()
@@ -84,4 +93,91 @@ class WRFEnvTest(unittest.TestCase):
             namelist_new_str = f.read()
         self.assertEqual(namelist_new_str, namelist_str)
     
+
+class WRFEnvTest(unittest.TestCase):
+    '''
+    Unit Test for wrf.environment module.
+    '''
     
+    def setUp(self):
+        from aqmrpc.wrf import environment as wrfenv
+        
+        self.wps_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.wps')
+        self.wrf_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.input')
+        self.arwpost_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.ARWpost')
+        
+        self.env = wrfenv.Env(1)
+        
+        #creates the environment
+        self.env.setup()
+        
+    
+    def tearDown(self):
+        #removes the environment
+        self.env.cleanup()
+    
+    def check_wps_result(self, subprogram):
+        '''check whether ungrib run successfully'''
+        program_list = ['ungrib', 'geogrid', 'metgrid']
+        if subprogram not in program_list:
+            raise Exception('invalid subprogram: %s' % subprogram)
+        
+        log_path = os.path.join(self.env.program_path('WPS'), '%s.log' % subprogram)
+        
+        tag = '*** Successful completion of program %s.exe ***' % subprogram
+        with open(log_path, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
+    
+    def check_wrf_result(self, subprogram):
+        '''check whether ungrib run successfully'''
+        program_list = ['real', 'wrf']
+        if subprogram not in program_list:
+            raise Exception('invalid subprogram: %s' % subprogram)
+        
+        log_path = os.path.join(self.env.program_path('WRF'), '%s_stdout.txt' % subprogram)
+        
+        if subprogram == 'real':
+            tag = 'SUCCESS COMPLETE REAL_EM INIT'
+        else:
+            tag = 'SUCCESS COMPLETE WRF'
+        with open(log_path, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag:
+                return True
+        return False
+    
+    def testWRF(self):
+        '''Test WRF Runner.'''
+        
+        # Get sample namelist.wps
+        with open(self.wps_namelist, 'r') as f:
+            namelist = f.read()
+        
+        self.env.set_namelist('WPS', namelist)
+        
+        self.env.prepare_wps()
+        self.env.run_wps()
+        self.env.cleanup_wps()
+        
+        # check whether the operation finished successfully
+        self.assertTrue(self.check_wps_result('ungrib'))
+        self.assertTrue(self.check_wps_result('geogrid'))
+        self.assertTrue(self.check_wps_result('metgrid'))
+        
+        
+        with open(self.wrf_namelist, 'r') as f:
+            namelist = f.read()
+        
+        self.env.set_namelist('WRF', namelist)
+        self.env.prepare_wrf()
+        self.env.run_wrf()
+        self.env.cleanup_wrf()
+        
+        self.assertTrue(self.check_wrf_result('real'))
+        self.assertTrue(self.check_wrf_result('wrf'))
+        

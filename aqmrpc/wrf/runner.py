@@ -20,6 +20,7 @@ from cStringIO import StringIO
 stdout_buffer = None
 stderr_buffer = None
 runner = None
+socketobj = None
 arguments = {}
 
 
@@ -165,11 +166,18 @@ def daemonize(pidpath):
 def cleanup(args):
     global stdout_buffer
     global stderr_buffer
-    socket_path = path.join(args.rundir, args.socket)
-    try:
-        os.remove(socket_path)
-    except OSError:
-        pass
+    
+
+#    socket path should be removed before binding if it already exist,
+#    if it removed when shutting down like this, there is a chance that
+#    we can't rebind to this path later
+      
+#    socket_path = path.join(args.rundir, args.socket)
+#    try:
+#        os.remove(socket_path)
+#    except OSError:
+#        pass
+
     try:
         os.remove(args.pidfile)
     except OSError:
@@ -191,6 +199,7 @@ def runserver(args):
     global stdout_buffer
     global stderr_buffer
     global runner
+    global socketobj
     
     stdout_buffer = open(args.stdout, 'w')
     stderr_buffer = open(args.stderr, 'w')
@@ -206,14 +215,14 @@ def runserver(args):
     
     socket_path = path.join(args.rundir, args.socket)
     
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    socketobj = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         os.remove(socket_path)
     except OSError:
         pass
     
-    s.bind(socket_path)
-    svr = ServerThread(s)
+    socketobj.bind(socket_path)
+    svr = ServerThread(socketobj)
     svr.start()
     runner.join()    
         
