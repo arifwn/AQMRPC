@@ -4,3 +4,4 @@
 dropin.cache
 twistd.log
 twistd.pid
+*.komodoproject
