@@ -213,7 +213,11 @@ class Env(object):
         self.envdata.running = True
         self.envdata.error = False
         self.envdata.save()
-        if not c.run_wps_ungrib():
+        if c.run_wps_ungrib():
+            self.envdata.running = False
+            self.envdata.error = False
+            self.envdata.save()
+        else:
             self.envdata.running = False
             self.envdata.error = True
             self.envdata.save()
@@ -225,7 +229,11 @@ class Env(object):
         self.envdata.running = True
         self.envdata.error = False
         self.envdata.save()
-        if not c.run_wps_geogrid():
+        if c.run_wps_geogrid():
+            self.envdata.running = False
+            self.envdata.error = False
+            self.envdata.save()
+        else:
             self.envdata.running = False
             self.envdata.error = True
             self.envdata.save()
@@ -237,7 +245,11 @@ class Env(object):
         self.envdata.running = True
         self.envdata.error = False
         self.envdata.save()
-        if not c.run_wps_metgrid():
+        if c.run_wps_metgrid():
+            self.envdata.running = False
+            self.envdata.error = False
+            self.envdata.save()
+        else:
             self.envdata.running = False
             self.envdata.error = True
             self.envdata.save()
@@ -304,7 +316,11 @@ class Env(object):
         self.envdata.running = True
         self.envdata.error = False
         self.envdata.save()
-        if not c.run_wrf_real():
+        if c.run_wrf_real():
+            self.envdata.running = False
+            self.envdata.error = False
+            self.envdata.save()
+        else:
             self.envdata.running = False
             self.envdata.error = True
             self.envdata.save()
@@ -316,7 +332,11 @@ class Env(object):
         self.envdata.running = True
         self.envdata.error = False
         self.envdata.save()
-        if not c.run_wrf():
+        if c.run_wrf():
+            self.envdata.running = False
+            self.envdata.error = False
+            self.envdata.save()
+        else:
             self.envdata.running = False
             self.envdata.error = True
             self.envdata.save()
@@ -339,17 +359,6 @@ class Env(object):
         
         # TODO: more cleanup here...
         
-    def run_arwpost(self):
-        '''ARWpost and produce grads files'''
-        # get the number of domains
-        # for each domain:
-        #   set input_root_name in namelist.ARWpost to appropriate wrfout file
-        #   set output_root_name to appropriate domain name
-        #   run arwpost
-        
-    def render_grads(self):
-        '''Render all produced grads files into a set of png files'''
-        # TODO: put some algorithm here...
     
     def get_running_operation(self, first_check=None):
         '''Return running operation (WPS, WRF, etc...'''
@@ -371,40 +380,7 @@ class Env(object):
         Reconnect to running WPS runner.
         If WPS runner is not running, return the result of runner immediately.
         '''
-        from aqmrpc.wrf.controller import ModelEnvController
-        c = ModelEnvController(self.envid)
         
-        if (self.envdata.current_step == 'ungrib') and \
-           (self.envdata.running == True):
-            # try to resume real.exe
-            if not c.resume_wrf_real():
-                self.envdata.running = False
-                self.envdata.error = True
-                self.envdata.save()
-                return False
-            
-            # continue to WRF
-            self.envdata.last_step = 'real'
-            self.envdata.current_step = 'wrf'
-            self.envdata.running = True
-            self.envdata.error = False
-            self.envdata.save()
-            if not c.run_wrf():
-                self.envdata.running = False
-                self.envdata.error = True
-                self.envdata.save()
-                return False
-            
-        elif (self.envdata.current_step == 'wrf') and \
-           (self.envdata.running == True):
-            # try to resume wrf
-            if not c.resume_wrf():
-                self.envdata.running = False
-                self.envdata.error = True
-                self.envdata.save()
-                return False
-        
-        return True
     
     def resume_wrf(self):
         '''
@@ -417,7 +393,11 @@ class Env(object):
         if (self.envdata.current_step == 'real') and \
            (self.envdata.running == True):
             # try to resume real.exe
-            if not c.resume_wrf_real():
+            if c.resume_wrf_real():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
                 self.envdata.running = False
                 self.envdata.error = True
                 self.envdata.save()
@@ -429,7 +409,11 @@ class Env(object):
             self.envdata.running = True
             self.envdata.error = False
             self.envdata.save()
-            if not c.run_wrf():
+            if c.run_wrf():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
                 self.envdata.running = False
                 self.envdata.error = True
                 self.envdata.save()
@@ -438,7 +422,11 @@ class Env(object):
         elif (self.envdata.current_step == 'wrf') and \
            (self.envdata.running == True):
             # try to resume wrf
-            if not c.resume_wrf():
+            if c.resume_wrf():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
                 self.envdata.running = False
                 self.envdata.error = True
                 self.envdata.save()
@@ -446,9 +434,101 @@ class Env(object):
         
         return True
     
-    def render(self):
-        '''Render model result with ARWpost'''
-        pass
+    def set_arwpost_namelist(self, namelist_str, wrfout_path, grads_basename,
+                             start_date=None, end_date=None):
+        '''set ARWpost namelist with specified parameters'''
+        
+        if not self.verify():
+            raise EnvironmentNotSetup()
+        
+        from aqmrpc.wrf.namelist import decode, encode
+        
+        parsed_namelist = decode.decode_namelist_string(namelist_str)
+        parsed_namelist['io']['input_root_name'][0] = wrfout_path
+        parsed_namelist['io']['output_root_name'][0] = grads_basename
+        
+        if start_date is not None:
+            parsed_namelist['datetime']['start_date'][0] = start_date
+        if end_date is not None:
+            parsed_namelist['datetime']['end_date'][0] = end_date
+        
+        namelist_str_new = encode.encode_namelist(parsed_namelist)
+        
+        # save to file
+        filepath = os.path.join(self.program_path('ARWpost'), 'namelist.ARWpost')
+        filepath = self.compute_path(filepath)
+        
+        try:
+            f = open(filepath, 'wb')
+        except IOError:
+            return
+            
+        f.write(namelist_str_new)
+        f.close()
+    
+    def run_arwpost(self, namelist_str):
+        '''Run ARWpost and produce GrADS files'''
+        # get the number of domains
+        # for each domain:
+        #   set input_root_name in namelist.ARWpost to appropriate wrfout file
+        #   set output_root_name to appropriate domain name
+        #   set start_date and end_date according to corresponding date setting
+        #       in namelist.wps file (notice the domain number)
+        #   run arwpost
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        wps_namelist_data = self.get_namelist_data('WPS')
+        wrf_namelist_data = self.get_namelist_data('WRF')
+        
+        n_domain = wrf_namelist_data['domains']['max_dom'][0]
+        
+        for d in range(n_domain):
+            domain = d + 1
+            
+            # get date
+            start_date = wps_namelist_data['share']['start_date'][d]
+            end_date = wps_namelist_data['share']['end_date'][d]
+            
+            # get wrfout path
+            wrfout_filename = 'wrfout_d%02i_%s' % (domain, start_date)
+            wrfout_path = os.path.join(self.program_path('WRF'),
+                                       wrfout_filename)
+            
+            # is it really exist?
+            os.stat(wrfout_path)
+            
+            # construct GrADS basename
+            grads_basename = 'd%02i_%s' % (domain, start_date)
+            
+            # save namelist file
+            self.set_arwpost_namelist(namelist_str, wrfout_path,
+                                      grads_basename, start_date,
+                                      end_date)
+            
+            # run ARWpost
+            self.envdata.current_step = 'arwpost'
+            self.envdata.running = True
+            self.envdata.error = False
+            self.envdata.save()
+            if c.run_arwpost():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+        
+        return True
+        
+    
+    def render_grads(self):
+        '''Generate GrADS files from model result with ARWpost'''
+        # for each grads file
+        #     generate hourly png files
+        #     save it in directory with name render_<grads file name> 
         
 
 def verify_id(envid):

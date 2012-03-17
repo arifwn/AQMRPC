@@ -180,4 +180,30 @@ class WRFEnvTest(unittest.TestCase):
         
         self.assertTrue(self.check_wrf_result('real'))
         self.assertTrue(self.check_wrf_result('wrf'))
+    
+    def check_arwpost_result(self):
+        '''check whether arwpost run successfully'''
+        
+        log_path = os.path.join(self.env.program_path('ARWpost'), 'arwpost_stdout.txt')
+        tag = '''!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  Successful completion of ARWpost  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+'''
+        with open(log_path, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag.strip():
+                return True
+        return False
+    
+    def testARWpost(self):
+        '''Test ARWpost Runner'''
+        import glob
+        
+        # Get sample namelist.ARWpost
+        with open(self.arwpost_namelist, 'r') as f:
+            namelist_str = f.read()
+        
+        self.assertTrue(self.env.run_arwpost(namelist_str))
+        self.assertTrue(self.check_arwpost_result())
         

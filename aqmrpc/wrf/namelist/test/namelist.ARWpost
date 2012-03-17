@@ -9,7 +9,7 @@
 &io 
  input_root_name                       = './wrfout_d01_2010-01-14_00:00:00',
  output_root_name                      = './d03',
- plot                                  = 'basic',
+ plot                                  = 'all',
  mercator_defs                         = .true.,
 / 
  

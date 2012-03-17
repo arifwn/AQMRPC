@@ -20,10 +20,10 @@ class ModelEnvController(object):
     def __init__(self, envid):
         self.envid = str(envid)
         self.working_path = environment.working_path(self.envid)
-        self.wps_path = path.join(self.working_path, 'WPS/')
-        self.wrf_path = path.join(self.working_path, 'WRF/')
-        self.arwpost_path = path.join(self.working_path, 'ARWpost/')
-        self.wpp_path = path.join(self.working_path, 'WPP/')
+        self.wps_path = environment.program_path(self.envid, 'WPS')
+        self.wrf_path = environment.program_path(self.envid, 'WRF')
+        self.arwpost_path = environment.program_path(self.envid, 'ARWpost')
+        self.wpp_path = environment.program_path(self.envid, 'WPP')
         r_path = os.path.dirname(__file__) 
         self.runner_path = path.join(r_path, 'runner.py')
         
@@ -34,6 +34,14 @@ class ModelEnvController(object):
         self.wrf_real_stderr_log = path.join(self.wrf_path, 'real_stderr.txt')
         self.wrf_real_runner_log = path.join(self.wrf_path, 'real_runner_log.txt')
         self.wrf_real_pid_file = path.join(self.wrf_path, 'real_pid.txt')
+        
+        # ARWpost
+        self.arwpost_socket_name = 'arwpost_socket_ctrl'
+        self.arwpost_socket_path = path.join(self.arwpost_path, self.arwpost_socket_name)
+        self.arwpost_stdout_log = path.join(self.arwpost_path, 'arwpost_stdout.txt')
+        self.arwpost_stderr_log = path.join(self.arwpost_path, 'arwpost_stderr.txt')
+        self.arwpost_runner_log = path.join(self.arwpost_path, 'arwpost_runner_log.txt')
+        self.arwpost_pid_file = path.join(self.arwpost_path, 'arwpost_pid.txt')
         
         # WRF
         self.wrf_socket_name = 'wrf_socket_ctrl'
@@ -275,6 +283,40 @@ class ModelEnvController(object):
             f.seek(-(len(tag)+1), os.SEEK_END)
             data = f.read().strip()
             if data == tag:
+                return True
+        return False
+    
+    def run_arwpost(self):
+        '''
+        Run ARWpost and wait until its completion.
+        Return True if wrf finished successfully, and False if otherwise
+        '''
+        
+        self.run(rundir=self.arwpost_path, 
+                 target='./ARWpost.exe', 
+                 socket=self.arwpost_socket_path,
+                 stdout=self.arwpost_stdout_log, 
+                 stderr=self.arwpost_stderr_log,
+                 runnerlog=self.arwpost_runner_log,
+                 pidfile=self.arwpost_pid_file,
+                 id='arwpost')
+        
+        return self.check_arwpost_result()
+    
+    def wps_arwpost_is_running(self):
+        '''check whether ARWpost job is running by checking the pid file'''
+        return check_pidfile(self.arwpost_pid_file)
+    
+    def check_arwpost_result(self):
+        '''check ARWpost run successfully'''
+        tag = '''!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  Successful completion of ARWpost  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+'''
+        with open(self.arwpost_stdout_log, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag.strip():
                 return True
         return False
     
