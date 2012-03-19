@@ -17,6 +17,8 @@ import logging
 from os import path
 from cStringIO import StringIO
 
+import interprocess_lock
+
 stdout_buffer = None
 stderr_buffer = None
 runner = None
@@ -201,6 +203,13 @@ def runserver(args):
     global runner
     global socketobj
     
+    if args.lockfile is None:
+        lock = None
+    else:
+        logging.debug('acquiring lock file: %s' % args.lockfile)
+        lock = interprocess_lock.FLockRLock(open(args.lockfile, 'a'))
+        lock_acquired = lock.acquire(blocking=0)
+    
     stdout_buffer = open(args.stdout, 'w')
     stderr_buffer = open(args.stderr, 'w')
     logging.debug('stdout: %s' % args.stdout)
@@ -224,6 +233,10 @@ def runserver(args):
     socketobj.bind(socket_path)
     svr = ServerThread(socketobj)
     svr.start()
+    if lock is not None:
+        if lock_acquired:
+            lock.release()
+            logging.debug('lock file released')
     runner.join()    
         
 
@@ -236,6 +249,7 @@ if __name__ == '__main__':
     parser.add_argument('--stderr', help='stderr log')
     parser.add_argument('--runnerlog', help='runner log')
     parser.add_argument('--pidfile', help='pid file')
+    parser.add_argument('--lockfile', help='lock file')
     parser.add_argument('--id', help='identifier')
     parser.add_argument('--debug', action='store_true', dest='debug', default=False,
                         help='debug mode')

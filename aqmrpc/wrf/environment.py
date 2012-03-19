@@ -82,7 +82,9 @@ class Env(object):
         return working_path(self.envid)
     
     def compute_path(self, targetpath):
-        '''Compute the real absolute path from environmental id and target path.'''
+        '''
+        Compute the real absolute path from environmental id and target path.
+        '''
         return compute_path(self.envid, targetpath)
     
     def program_path(self, program):
@@ -106,12 +108,15 @@ class Env(object):
         
         parsed_namelist = decode.decode_namelist_string(namelist_str)
         if program == 'WPS':
-            filepath = os.path.join(self.program_path(program), 'namelist.wps')
+            filepath = os.path.join(self.program_path(program),
+                                    'namelist.wps')
             parsed_namelist['geogrid']['geog_data_path'][0] = get_geog_path()
         elif program == 'WRF':
-            filepath = os.path.join(self.program_path(program), 'namelist.input')
+            filepath = os.path.join(self.program_path(program),
+                                    'namelist.input')
         elif program == 'ARWpost':
-            filepath = os.path.join(self.program_path(program), 'namelist.ARWpost')
+            filepath = os.path.join(self.program_path(program),
+                                    'namelist.ARWpost')
             
         namelist_str_new = encode.encode_namelist(parsed_namelist)
         
@@ -138,11 +143,14 @@ class Env(object):
         from aqmrpc.wrf.namelist.decode import decode_namelist
         
         if program == 'WPS':
-            filepath = os.path.join(self.program_path(program), 'namelist.wps')
+            filepath = os.path.join(self.program_path(program),
+                                    'namelist.wps')
         elif program == 'WRF':
-            filepath = os.path.join(self.program_path(program), 'namelist.input')
+            filepath = os.path.join(self.program_path(program),
+                                    'namelist.input')
         elif program == 'ARWpost':
-            filepath = os.path.join(self.program_path(program), 'namelist.ARWpost')
+            filepath = os.path.join(self.program_path(program),
+                                    'namelist.ARWpost')
         
         namelist_data = decode_namelist(filepath)
         return namelist_data
@@ -181,7 +189,8 @@ class Env(object):
             
             if (not fnl_exist) and (aqmsettings.AQM_REMOTE_CACHE is not None):
                 # attemp to download the file from remote cache to local cache
-                network_path = '%s/fnl/%s' % (aqmsettings.AQM_REMOTE_CACHE, filename)
+                network_path = '%s/fnl/%s' % (aqmsettings.AQM_REMOTE_CACHE,
+                                              filename)
                 try:
                     urllib.urlretrieve(network_path, fnl_path)
                 except IOError:
@@ -455,7 +464,8 @@ class Env(object):
         namelist_str_new = encode.encode_namelist(parsed_namelist)
         
         # save to file
-        filepath = os.path.join(self.program_path('ARWpost'), 'namelist.ARWpost')
+        filepath = os.path.join(self.program_path('ARWpost'),
+                                'namelist.ARWpost')
         filepath = self.compute_path(filepath)
         
         try:
@@ -472,8 +482,8 @@ class Env(object):
         # for each domain:
         #   set input_root_name in namelist.ARWpost to appropriate wrfout file
         #   set output_root_name to appropriate domain name
-        #   set start_date and end_date according to corresponding date setting
-        #       in namelist.wps file (notice the domain number)
+        #   set start_date and end_date according to corresponding date
+        #       setting in namelist.wps file (notice the domain number)
         #   run arwpost
         from aqmrpc.wrf.controller import ModelEnvController
         c = ModelEnvController(self.envid)
@@ -609,7 +619,8 @@ def generate_fnl_list(start, end):
     
     for i in xrange(n_files):
         filedate = start + datetime.timedelta(0, (i * (6 * 60 * 60)))
-        filename = template.format(filedate.year, filedate.month, filedate.day, filedate.hour)
+        filename = template.format(filedate.year, filedate.month,
+                                   filedate.day, filedate.hour)
         filenames.append(filename)
     
     return filenames

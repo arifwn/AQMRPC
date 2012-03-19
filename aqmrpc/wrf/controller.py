@@ -13,6 +13,7 @@ from os import path
 
 import environment
 from aqmrpc import settings
+from aqmrpc.misc import interprocess_lock
 
 
 class ModelEnvController(object):
@@ -24,7 +25,7 @@ class ModelEnvController(object):
         self.wrf_path = environment.program_path(self.envid, 'WRF')
         self.arwpost_path = environment.program_path(self.envid, 'ARWpost')
         self.wpp_path = environment.program_path(self.envid, 'WPP')
-        r_path = os.path.dirname(__file__) 
+        r_path = os.path.dirname(interprocess_lock.__file__) 
         self.runner_path = path.join(r_path, 'runner.py')
         
         # WRF Real
@@ -34,6 +35,7 @@ class ModelEnvController(object):
         self.wrf_real_stderr_log = path.join(self.wrf_path, 'real_stderr.txt')
         self.wrf_real_runner_log = path.join(self.wrf_path, 'real_runner_log.txt')
         self.wrf_real_pid_file = path.join(self.wrf_path, 'real_pid.txt')
+        self.wrf_real_lock_file = path.join(self.wrf_path, 'real_lock.txt')
         
         # ARWpost
         self.arwpost_socket_name = 'arwpost_socket_ctrl'
@@ -42,6 +44,7 @@ class ModelEnvController(object):
         self.arwpost_stderr_log = path.join(self.arwpost_path, 'arwpost_stderr.txt')
         self.arwpost_runner_log = path.join(self.arwpost_path, 'arwpost_runner_log.txt')
         self.arwpost_pid_file = path.join(self.arwpost_path, 'arwpost_pid.txt')
+        self.arwpost_lock_file = path.join(self.arwpost_path, 'arwpost_lock.txt')
         
         # WRF
         self.wrf_socket_name = 'wrf_socket_ctrl'
@@ -50,6 +53,7 @@ class ModelEnvController(object):
         self.wrf_stderr_log = path.join(self.wrf_path, 'wrf_stderr.txt')
         self.wrf_runner_log = path.join(self.wrf_path, 'wrf_runner_log.txt')
         self.wrf_pid_file = path.join(self.wrf_path, 'wrf_pid.txt')
+        self.wrf_lock_file = path.join(self.wrf_path, 'wrf_lock.txt')
         
         # WPS UNGRIB
         self.wps_ungrib_socket_name = 'ungrib_socket_ctrl'
@@ -59,6 +63,7 @@ class ModelEnvController(object):
         self.wps_ungrib_runner_log = path.join(self.wps_path, 'ungrib_runner_log.txt')
         self.wps_ungrib_log = path.join(self.wps_path, 'ungrib.log')
         self.wps_ungrib_pid_file = path.join(self.wps_path, 'ungrib_pid.txt')
+        self.wps_ungrib_lock_file = path.join(self.wps_path, 'ungrib_lock.txt')
         
         # WPS GEOGRID
         self.wps_geogrid_socket_name = 'ungrib_socket_ctrl'
@@ -68,6 +73,7 @@ class ModelEnvController(object):
         self.wps_geogrid_runner_log = path.join(self.wps_path, 'geogrid_runner_log.txt')
         self.wps_geogrid_log = path.join(self.wps_path, 'geogrid.log')
         self.wps_geogrid_pid_file = path.join(self.wps_path, 'geogrid_pid.txt')
+        self.wps_geogrid_lock_file = path.join(self.wps_path, 'geogrid_lock.txt')
         
         # WPS METGRID
         self.wps_metgrid_socket_name = 'metgrid_socket_ctrl'
@@ -77,6 +83,7 @@ class ModelEnvController(object):
         self.wps_metgrid_runner_log = path.join(self.wps_path, 'metgrid_runner_log.txt')
         self.wps_metgrid_log = path.join(self.wps_path, 'metgrid.log')
         self.wps_metgrid_pid_file = path.join(self.wps_path, 'metgrid_pid.txt')
+        self.wps_metgrid_lock_file = path.join(self.wps_path, 'metgrid_lock.txt')
     
     def wait(self, socket_path):
         '''wait until runner finished'''
@@ -86,7 +93,8 @@ class ModelEnvController(object):
                 # now wait until runner finished
                 controller.wait()
                 break
-            time.sleep(1)
+            else:
+                time.sleep(1)
     
     def run(self, **kwargs):
         subprocess.call([settings.AQM_PYTHON_BIN, self.runner_path, 
@@ -97,13 +105,20 @@ class ModelEnvController(object):
                          '--stderr', kwargs['stderr'],
                          '--runnerlog', kwargs['runnerlog'],
                          '--pidfile', kwargs['pidfile'],
+                         '--lockfile', kwargs['lockfile'],
                          '--id', kwargs['id']])
+        
+        # acquire lock
+        lock = interprocess_lock.FLockRLock(open(kwargs['lockfile'], 'a'))
+        lock.acquire()
+        # runner is now running
+        lock.release()
         
         self.wait(kwargs['socket'])
         
         # sleep for a while to make sure files opened by runner
         # has been closed properly
-        time.sleep(5)
+        time.sleep(1)
     
     def resume(self, socket_path):
         '''Resume wait for the specified runner'''
@@ -127,6 +142,7 @@ class ModelEnvController(object):
                  stderr=self.wrf_real_stderr_log,
                  runnerlog=self.wrf_real_runner_log,
                  pidfile=self.wrf_real_pid_file,
+                 lockfile=self.wrf_real_lock_file,
                  id='real')
         
         return self.check_wrf_real_result()
@@ -167,6 +183,7 @@ class ModelEnvController(object):
                  stderr=self.wrf_stderr_log,
                  runnerlog=self.wrf_runner_log,
                  pidfile=self.wrf_pid_file,
+                 lockfile=self.wrf_lock_file,
                  id='wrf')
         
         return self.check_wrf_result()
@@ -206,6 +223,7 @@ class ModelEnvController(object):
                  stderr=self.wps_ungrib_stderr_log,
                  runnerlog=self.wps_ungrib_runner_log,
                  pidfile=self.wps_ungrib_pid_file,
+                 lockfile=self.wps_ungrib_lock_file,
                  id='ungrib')
         
         return self.check_wps_ungrib_result()
@@ -237,6 +255,7 @@ class ModelEnvController(object):
                  stderr=self.wps_geogrid_stderr_log,
                  runnerlog=self.wps_geogrid_runner_log,
                  pidfile=self.wps_geogrid_pid_file,
+                 lockfile=self.wps_geogrid_lock_file,
                  id='geogrid')
         
         return self.check_wps_geogrid_result()
@@ -268,6 +287,7 @@ class ModelEnvController(object):
                  stderr=self.wps_metgrid_stderr_log,
                  runnerlog=self.wps_metgrid_runner_log,
                  pidfile=self.wps_metgrid_pid_file,
+                 lockfile=self.wps_metgrid_lock_file,
                  id='metgrid')
         
         return self.check_wps_metgrid_result()
@@ -299,6 +319,7 @@ class ModelEnvController(object):
                  stderr=self.arwpost_stderr_log,
                  runnerlog=self.arwpost_runner_log,
                  pidfile=self.arwpost_pid_file,
+                 lockfile=self.arwpost_lock_file,
                  id='arwpost')
         
         return self.check_arwpost_result()
