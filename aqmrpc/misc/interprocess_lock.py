@@ -1,6 +1,8 @@
 '''
 Created on March 19, 2012
 
+Adapted from http://code.activestate.com/recipes/577395-multiprocess-safe-logging-file-handler-interproces/
+
 @author: arif
 '''
 import logging
@@ -143,7 +145,7 @@ class FLockFileHandler(LockedFileHandler):
     '''LockedFileHandler implementation using FLockRLock.'''
 
     def createLock(self):
-        "Create a lock for serializing access to the underlying I/O."
+        '''Create a lock for serializing access to the underlying I/O.'''
         self.lock = FLockRLock(self.stream)
 
 

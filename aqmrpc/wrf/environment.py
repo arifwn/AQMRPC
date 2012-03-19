@@ -534,11 +534,31 @@ class Env(object):
         return True
         
     
-    def render_grads(self):
+    def render_grads(self, gs_template):
         '''Generate GrADS files from model result with ARWpost'''
-        # for each grads file
-        #     generate hourly png files
-        #     save it in directory with name render_<grads file name> 
+        from aqmrpc.grads import controller as grads_controller
+        
+        ctl_files = []
+        wps_namelist_data = self.get_namelist_data('WPS')
+        wrf_namelist_data = self.get_namelist_data('WRF')
+        n_domain = wrf_namelist_data['domains']['max_dom'][0]
+        
+        for d in range(n_domain):
+            domain = d + 1
+            
+            # get date
+            start_date = wps_namelist_data['share']['start_date'][d]
+            
+            # construct GrADS ctl filename
+            ctl_file = os.path.join(self.program_path('ARWpost'),
+                                    'd%02i_%s.ctl' % (domain, start_date))
+            ctl_files.append(ctl_file)
+        
+        c = grads_controller.GradsController(self.program_path('ARWpost'),
+                                             gs_template)
+        c.plot(ctl_files)
+        
+        
         
 
 def verify_id(envid):

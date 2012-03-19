@@ -151,8 +151,26 @@ class WRFEnvTest(unittest.TestCase):
                 return True
         return False
     
+    def check_arwpost_result(self):
+        '''check whether arwpost run successfully'''
+        
+        log_path = os.path.join(self.env.program_path('ARWpost'), 'arwpost_stdout.txt')
+        tag = '''!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!  Successful completion of ARWpost  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+'''
+        with open(log_path, 'r') as f:
+            f.seek(-(len(tag)+1), os.SEEK_END)
+            data = f.read().strip()
+            if data == tag.strip():
+                return True
+        return False
+    
+    
     def testWRF(self):
         '''Test WRF Runner.'''
+        
+        # Run WPS
         
         # Get sample namelist.wps
         with open(self.wps_namelist, 'r') as f:
@@ -169,7 +187,7 @@ class WRFEnvTest(unittest.TestCase):
         self.assertTrue(self.check_wps_result('geogrid'))
         self.assertTrue(self.check_wps_result('metgrid'))
         
-        
+        # Run WRF
         with open(self.wrf_namelist, 'r') as f:
             namelist = f.read()
         
@@ -181,23 +199,7 @@ class WRFEnvTest(unittest.TestCase):
         self.assertTrue(self.check_wrf_result('real'))
         self.assertTrue(self.check_wrf_result('wrf'))
     
-    def check_arwpost_result(self):
-        '''check whether arwpost run successfully'''
-        
-        log_path = os.path.join(self.env.program_path('ARWpost'), 'arwpost_stdout.txt')
-        tag = '''!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!  Successful completion of ARWpost  !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-'''
-        with open(log_path, 'r') as f:
-            f.seek(-(len(tag)+1), os.SEEK_END)
-            data = f.read().strip()
-            if data == tag.strip():
-                return True
-        return False
-    
-    def testARWpost(self):
-        '''Test ARWpost Runner'''
+        # Run ARWpost
         import glob
         
         # Get sample namelist.ARWpost
@@ -207,3 +209,12 @@ class WRFEnvTest(unittest.TestCase):
         self.assertTrue(self.env.run_arwpost(namelist_str))
         self.assertTrue(self.check_arwpost_result())
         
+        # Render result with GrADS
+        from aqmrpc.grads import controller as grcon
+        sample_gs_template = os.path.join(os.path.dirname(grcon.__file__), 'test/plot_all.gs')
+        with open(sample_gs_template, 'r') as f:
+            gs_tmp = f.read()
+        self.env.render_grads(gs_tmp)
+    
+    
+    
