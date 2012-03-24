@@ -93,6 +93,25 @@ class RPCBehaviorTest(unittest.TestCase):
             namelist_new_str = f.read()
         self.assertEqual(namelist_new_str, namelist_str)
     
+    def testWRFjob(self):
+        from aqmrpc.grads import controller as grcon
+        sample_gs_template = os.path.join(os.path.dirname(grcon.__file__), 'test/plot_all.gs')
+        wps_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.wps')
+        wrf_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.input')
+        arwpost_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.ARWpost')
+        
+        data = {}
+        with open(wrf_namelist, 'r') as f:
+            data['WRFnamelist'] = f.read()
+        with open(wps_namelist, 'r') as f:
+            data['WPSnamelist'] = f.read()
+        with open(arwpost_namelist, 'r') as f:
+            data['ARWpostnamelist'] = f.read()
+        with open(sample_gs_template, 'r') as f:
+            data['grads_template'] = f.read()
+        
+        self,client.wrf.add_job('test job', data, envid=1)
+    
 
 class WRFEnvTest(unittest.TestCase):
     '''

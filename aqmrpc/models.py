@@ -29,4 +29,10 @@ class WRFEnvironment(models.Model):
         self.running = False
         self.error = False
         self.env_setup = False
-        
+
+
+class CurrentJob(models.Model):
+    name = models.TextField()
+    job_type = models.TextField(db_index=True)
+    envid = models.IntegerField(db_index=True)
+    step = models.TextField(blank=True)

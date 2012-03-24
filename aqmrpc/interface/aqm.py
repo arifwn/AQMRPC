@@ -15,6 +15,7 @@ from twisted.python import log
 from aqmrpc.wrf import environment as wrfenv
 from aqmrpc.models import WRFEnvironment
 from aqmrpc.misc import filesystem
+from servercon import supervisor
 from aqmrpc import settings as aqmsettings
 
 
@@ -64,6 +65,12 @@ class WRF(xmlrpc.XMLRPC):
     
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
+    
+    def xmlrpc_add_job(self, name, data, envid=None):
+        from aqmrpc.wrf.job import WRFRun
+        j = WRFRun(name=name, data=data, envid=envid)
+        supervisor.put_job(j)
+        return True
         
     def xmlrpc_setupenv(self, envid=None):
         ''' 
