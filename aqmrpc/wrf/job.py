@@ -47,9 +47,8 @@ class WRFRun(supervisor.BaseJob):
     
     def tear_down(self):
         # cleanup wrf environment
-        pass
     
-        # TODO: remove database entry for current wrf job
+        # remove database entry for current wrf job
         self.jobentry.delete()
     
     def process(self):
@@ -111,4 +110,33 @@ class WRFResume(supervisor.BaseJob):
         self.data = data
         self.envid = envid
         self.env = None
+        self.jobentry = None
+    
+    def set_up(self):
+        # open wrf environment
+        self.env = wrfenv.Env(self.envid)
+        
+        # creates the environment
+        self.env.setup()
+        
+        # TODO: setup log rotation
+        
+        # setup namelist file
+        #self.env.set_namelist('WRF', self.data['WRFnamelist'])
+        #self.env.set_namelist('WPS', self.data['WPSnamelist'])
+        
+        # Try to get the job record from database
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            self.jobentry = None
+    
+    def tear_down(self):
+        # remove job entry from database
+        if self.jobentry is None:
+            self.jobentry.delete()
+    
+    def process(self):
+        # try to reconnect to running process
+        pass
     

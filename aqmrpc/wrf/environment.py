@@ -389,7 +389,100 @@ class Env(object):
         Reconnect to running WPS runner.
         If WPS runner is not running, return the result of runner immediately.
         '''
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
         
+        if (self.envdata.current_step == 'ungrib') and \
+           (self.envdata.running == True):
+            # try to resume ungrib.exe
+            if c.resume_wps_ungrib():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+            # continue to geogrid and metgrid
+            # run geogrid
+            self.envdata.last_step = 'ungrib'
+            self.envdata.current_step = 'geogrid'
+            self.envdata.running = True
+            self.envdata.error = False
+            self.envdata.save()
+            if c.run_wps_geogrid():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+            # run metgrid
+            self.envdata.last_step = 'geogrid'
+            self.envdata.current_step = 'metgrid'
+            self.envdata.running = True
+            self.envdata.error = False
+            self.envdata.save()
+            if c.run_wps_metgrid():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+        elif (self.envdata.current_step == 'geogrid') and \
+           (self.envdata.running == True):
+            # try to resume geogrid.exe
+            if c.resume_wps_geogrid():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+            # continue to metgrid
+            
+            # run metgrid
+            self.envdata.last_step = 'geogrid'
+            self.envdata.current_step = 'metgrid'
+            self.envdata.running = True
+            self.envdata.error = False
+            self.envdata.save()
+            if c.run_wps_metgrid():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+            
+        elif (self.envdata.current_step == 'metgrid') and \
+           (self.envdata.running == True):
+            # try to resume metgrid.exe
+            if c.resume_wps_metgrid():
+                self.envdata.running = False
+                self.envdata.error = False
+                self.envdata.save()
+            else:
+                self.envdata.running = False
+                self.envdata.error = True
+                self.envdata.save()
+                return False
+        
+        return True
     
     def resume_wrf(self):
         '''

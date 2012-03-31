@@ -228,6 +228,14 @@ class ModelEnvController(object):
         
         return self.check_wps_ungrib_result()
     
+    def resume_wps_ungrib(self):
+        '''
+        Reconnect to running wps ungrib session.
+        Return True if wps ungrib finished successfully, and False if otherwise
+        '''
+        self.resume(self.wps_ungrib_socket_path)
+        return self.check_wps_ungrib_result()
+        
     def wps_ungrib_is_running(self):
         '''check whether ungrib job is running by checking the pid file'''
         return check_pidfile(self.wps_ungrib_pid_file)
@@ -260,6 +268,14 @@ class ModelEnvController(object):
         
         return self.check_wps_geogrid_result()
     
+    def resume_wps_geogrid(self):
+        '''
+        Reconnect to running wps geogrid session.
+        Return True if wps geogrid finished successfully, and False if otherwise
+        '''
+        self.resume(self.wps_geogrid_socket_path)
+        return self.check_wps_geogrid_result()
+        
     def wps_geogrid_is_running(self):
         '''check whether geogrid job is running by checking the pid file'''
         return check_pidfile(self.wps_ungrib_pid_file)
@@ -292,6 +308,14 @@ class ModelEnvController(object):
         
         return self.check_wps_metgrid_result()
     
+    def resume_wps_metgrid(self):
+        '''
+        Reconnect to running wps metgrid session.
+        Return True if wps metgrid finished successfully, and False if otherwise
+        '''
+        self.resume(self.wps_metgrid_socket_path)
+        return self.check_wps_metgrid_result()
+        
     def wps_metgrid_is_running(self):
         '''check whether metgrid job is running by checking the pid file'''
         return check_pidfile(self.wps_metgrid_pid_file)
@@ -324,6 +348,14 @@ class ModelEnvController(object):
         
         return self.check_arwpost_result()
     
+    def resume_arwpost(self):
+        '''
+        Reconnect to running arwpost session.
+        Return True if arwpost finished successfully, and False if otherwise
+        '''
+        self.resume(self.arwpost_socket_path)
+        return self.check_arwpost_result()
+        
     def wps_arwpost_is_running(self):
         '''check whether ARWpost job is running by checking the pid file'''
         return check_pidfile(self.arwpost_pid_file)
