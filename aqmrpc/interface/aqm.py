@@ -45,17 +45,15 @@ class Server(xmlrpc.XMLRPC):
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
     
-    def xmlrpc_all(self):
-        return []
-    
-    def xmlrpc_filter(self, **kwargs):
-        return []
-    
-    def xmlrpc_status(self, id):
-        return []
-    
-    def xmlrpc_info(self, id):
-        return []
+    def xmlrpc_utilization(self):
+        import random
+        dummy = {}
+        dummy['cpu'] = float(random.randint(1, 100))
+        dummy['memory'] = float(random.randint(1000, 7000) * 1024 * 1024)
+        dummy['disk'] = float(2000 * 1024 * 1024 * 1024)
+        dummy['slot'] = 4
+        
+        return dummy
     
     def xmlrpc_test_echo(self, s):
         return s
