@@ -46,10 +46,14 @@ class Server(xmlrpc.XMLRPC):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
     
     def xmlrpc_utilization(self):
+        import psutil
         import random
         dummy = {}
-        dummy['cpu'] = float(random.randint(1, 100))
-        dummy['memory'] = float(random.randint(1000, 7000) * 1024 * 1024)
+        dummy['cpu'] = psutil.cpu_percent()
+        mem = psutil.phymem_usage()
+        dummy['memory_used'] = mem.used
+        dummy['memory_total'] = mem.total
+        dummy['memory_percent'] = mem.percent
         dummy['disk'] = float(2000 * 1024 * 1024 * 1024)
         dummy['slot'] = 4
         
