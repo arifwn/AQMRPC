@@ -48,16 +48,24 @@ class Server(xmlrpc.XMLRPC):
     def xmlrpc_utilization(self):
         import psutil
         import random
-        dummy = {}
-        dummy['cpu'] = psutil.cpu_percent()
+        data = {}
+        data['cpu'] = psutil.cpu_percent()
         mem = psutil.phymem_usage()
-        dummy['memory_used'] = mem.used
-        dummy['memory_total'] = mem.total
-        dummy['memory_percent'] = mem.percent
-        dummy['disk'] = float(2000 * 1024 * 1024 * 1024)
-        dummy['slot'] = 4
         
-        return dummy
+        # xmlrpc doesn't support long int, so return data as float
+        data['memory_used'] = mem.percent / 100.0 * mem.total
+        data['memory_total'] = float(mem.total)
+        data['memory_percent'] = mem.percent
+        
+        disk = psutil.disk_usage(aqmsettings.AQM_WORKING_DIR)
+        
+        data['disk_used'] = float(disk.used)
+        data['disk_total'] = float(disk.total)
+        data['disk_percent'] = disk.percent
+        
+        data['slot'] = 4
+        
+        return data
     
     def xmlrpc_test_echo(self, s):
         return s
