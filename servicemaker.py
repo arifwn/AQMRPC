@@ -8,7 +8,7 @@ import xmlrpclib
 
 from OpenSSL import SSL
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'aqmrpcserver.settings'
 from django.conf import settings
 
 from zope.interface import implements
@@ -110,15 +110,15 @@ class AQMServiceMaker(object):
             r.putSubHandler('test', aqmtest.TestInterface())
         
         # setup ssl context
-        myContextFactory = ssl.DefaultOpenSSLContextFactory(aqmsettings.AQM_CERT_KEY,
-                                                            aqmsettings.AQM_CERT_CERT)
+        myContextFactory = ssl.DefaultOpenSSLContextFactory(settings.SSL_CERT_KEY,
+                                                            settings.SSL_CERT_CERT)
         ctx = myContextFactory.getContext()
         ctx.set_verify(SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
                        verifyCallback)
         
         # Since we have self-signed certs we have to explicitly
         # tell the server to trust them.
-        ctx.load_verify_locations(aqmsettings.AQM_CERT_CACERT)
+        ctx.load_verify_locations(settings.SSL_CERT_CACERT)
         
         xmlrpc.addIntrospection(r)
         root.putChild('RPC2', r)

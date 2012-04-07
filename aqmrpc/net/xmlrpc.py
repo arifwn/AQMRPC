@@ -6,15 +6,15 @@ Created on Mar 11, 2012
 
 import xmlrpclib
 
-from aqmrpc import settings as aqmsettings
+from django.conf import settings
 
 
 class SafeTransportWithCert(xmlrpclib.SafeTransport):
     
     def __init__(self, use_datetime=1):
         xmlrpclib.SafeTransport.__init__(self, use_datetime)
-        self.__cert_file = aqmsettings.AQM_CERT_CERT
-        self.__key_file  = aqmsettings.AQM_CERT_KEY
+        self.__cert_file = settings.SSL_CERT_CERT
+        self.__key_file  = settings.SSL_CERT_KEY
         self.user_agent = 'Test Client 0.0.1'
     
     def make_connection(self,host):

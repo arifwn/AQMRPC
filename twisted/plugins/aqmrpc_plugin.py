@@ -8,7 +8,6 @@ Created on Jan 22, 2012
 
 @author: arif
 '''
+import servicemaker
 
-from aqmrpc.servicemaker import AQMServiceMaker
-
-serviceMaker = AQMServiceMaker()
+serviceMaker = servicemaker.AQMServiceMaker()

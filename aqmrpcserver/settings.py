@@ -127,6 +127,10 @@ INSTALLED_APPS = (
     'aqmrpc',
 )
 
+SSL_CERT_CERT = './cert/cert.pem'
+SSL_CERT_KEY = './cert/key.pem'
+SSL_CERT_CACERT = './cert/cacert.pem'
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
