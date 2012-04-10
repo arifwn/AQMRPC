@@ -101,6 +101,8 @@ class RPCBehaviorTest(unittest.TestCase):
         arwpost_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.ARWpost')
         
         data = {}
+        data['name'] = 'test_job'
+        data['id'] = 1
         with open(wrf_namelist, 'r') as f:
             data['WRFnamelist'] = f.read()
         with open(wps_namelist, 'r') as f:
@@ -110,7 +112,7 @@ class RPCBehaviorTest(unittest.TestCase):
         with open(sample_gs_template, 'r') as f:
             data['grads_template'] = f.read()
         
-        self,client.wrf.add_job('test job', data, envid=1)
+        self,client.wrf.add_job(data, envid=1)
     
 
 class WRFEnvTest(unittest.TestCase):

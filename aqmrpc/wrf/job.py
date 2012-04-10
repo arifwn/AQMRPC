@@ -5,20 +5,22 @@ from aqmrpc.wrf import environment as wrfenv
 from servercon import supervisor
 
 from aqmrpc.models import CurrentJob
+from aqmrpc.jobs import manager as jobmanager
 
 class WRFRun(supervisor.BaseJob):
     def __init__(self, name, data, callback=None, envid=None):
         '''
         WRF modeling job.
-        name: name identifying this job
+        data['name']: name identifying this job
+        data['id']: task id from web interface
         data['WRFnamelist']: WRF namelist string data
         data['WPSnamelist']: WPS namelist string data
         data['ARWpostnamelist']: ARWpost namelist string data
         data['grads_template']: grads script template
         '''
-        super(WRFRun, self).__init__(name=('<WRF> %s' % name),
-                                     runner=supervisor.THREAD_POOL_CPUBOUND_SIZE,
+        super(WRFRun, self).__init__(runner=supervisor.RUNNER_CPUBOUND,
                                      callback=callback)
+        self.name = '<WRF> %s' % data['name']
         self.data = data
         self.envid = envid
         self.env = None
@@ -44,12 +46,18 @@ class WRFRun(supervisor.BaseJob):
                                    job_type=self.__class__.__name__)
         self.jobentry.save()
         
+        # increment job count
+        jobmanager.increment_job()
+        
     
     def tear_down(self):
         # cleanup wrf environment
     
         # remove database entry for current wrf job
         self.jobentry.delete()
+        
+        # decrement job count
+        jobmanager.decrement_job()
     
     def process(self):
         

@@ -7,10 +7,11 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
-THREAD_POOL_DEFAULT_SIZE = 20
-THREAD_POOL_CPUBOUND_SIZE = 4
+# size of runner threadpool
+THREAD_POOL_DEFAULT_SIZE = 20 # handling network connectivity
+THREAD_POOL_CPUBOUND_SIZE = 2 # running external process & cpu intensive activity
 THREAD_POOL_NETBOUND_SIZE = 4 # separated from general IO since network proxy sometimes has limit on number of simultaneous connection
-THREAD_POOL_IOBOUND_SIZE = 4
+THREAD_POOL_IOBOUND_SIZE = 4 # general i/o access
 
 MANAGERS = ADMINS
 

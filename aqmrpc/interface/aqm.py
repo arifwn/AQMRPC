@@ -15,6 +15,7 @@ from twisted.python import log
 from aqmrpc.wrf import environment as wrfenv
 from aqmrpc.models import WRFEnvironment
 from aqmrpc.misc import filesystem
+from aqmrpc.jobs import manager as jobmanager
 from servercon import supervisor
 from aqmrpc import settings as aqmsettings
 
@@ -63,7 +64,9 @@ class Server(xmlrpc.XMLRPC):
         data['disk_total'] = float(disk.total)
         data['disk_percent'] = disk.percent
         
-        data['slot'] = 4
+        # get job slot status
+        data['slot_used'] = float(jobmanager.get_job_count())
+        data['slot_total'] = float(jobmanager.get_job_capacity())
         
         return data
     
@@ -76,9 +79,9 @@ class WRF(xmlrpc.XMLRPC):
     def __init__(self, allowNone=True, useDateTime=True):
         xmlrpc.XMLRPC.__init__(self, allowNone, useDateTime)
     
-    def xmlrpc_add_job(self, name, data, envid=None):
+    def xmlrpc_add_job(self, data, envid=None):
         from aqmrpc.wrf.job import WRFRun
-        j = WRFRun(name=name, data=data, envid=envid)
+        j = WRFRun(data=data, envid=envid)
         supervisor.put_job(j)
         return True
         
