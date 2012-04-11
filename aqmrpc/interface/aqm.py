@@ -84,6 +84,9 @@ class WRF(xmlrpc.XMLRPC):
         j = WRFRun(data=data, envid=envid)
         supervisor.put_job(j)
         return True
+    
+    def xmlrpc_stop_job(self, envid):
+        return False
         
     def xmlrpc_setupenv(self, envid=None):
         ''' 
