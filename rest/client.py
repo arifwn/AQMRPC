@@ -1,4 +1,7 @@
 """
+    Modified to allow validation server's certificate with external cacert list.
+    -- Arif Widi Nugroho
+    
     Copyright (C) 2008 Benjamin O'Steen
 
     This file is part of python-fedoracommons.
@@ -18,7 +21,7 @@
 """
 
 __license__ = 'GPL http://www.gnu.org/licenses/gpl.txt'
-__author__ = "Benjamin O'Steen <bosteen@gmail.com>"
+__author__ = "Benjamin O'Steen <bosteen@gmail.com>, Arif Widi Nugroho <arif@sainsmograf.com>"
 __version__ = '0.1'
 
 import httplib2
@@ -34,7 +37,7 @@ import mimetypes
 from cStringIO import StringIO
 
 class Connection:
-    def __init__(self, base_url, username=None, password=None):
+    def __init__(self, base_url, username=None, password=None, cache=None, ca_certs=None, user_agent_name=None):
         self.base_url = base_url
         self.username = username
         m = MimeTypes()
@@ -48,8 +51,14 @@ class Connection:
         self.host = netloc
         self.path = path
         
+        if user_agent_name is None:
+            self.user_agent_name = 'Basic Agent'
+        else:
+            self.user_agent_name = user_agent_name
+        
         # Create Http class with support for Digest HTTP Authentication, if necessary
-        self.h = httplib2.Http(".cache")
+        # self.h = httplib2.Http(".cache")
+        self.h = httplib2.Http(cache=cache, ca_certs=ca_certs)
         self.h.follow_all_redirects = True
         if username and password:
             self.h.add_credentials(username, password)
@@ -77,7 +86,7 @@ class Connection:
     def request(self, resource, method = "get", args = None, body = None, filename=None, headers={}):
         params = None
         path = resource
-        headers['User-Agent'] = 'Basic Agent'
+        headers['User-Agent'] = self.user_agent_name
         
         BOUNDARY = u'00hoYUXOnLD5RQ8SKGYVgLLt64jejnMwtO7q8XE1'
         CRLF = u'\r\n'

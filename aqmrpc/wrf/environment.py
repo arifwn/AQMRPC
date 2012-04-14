@@ -266,6 +266,14 @@ class Env(object):
         
         return True
     
+    def stop_wps(self):
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        c.terminate_wps_ungrib()
+        c.terminate_wps_geogrid()
+        c.terminate_wps_metgrid()
+    
     def cleanup_wps(self):
         '''Remove temporary files from WPS working directory '''
         if not self.verify():
@@ -353,6 +361,13 @@ class Env(object):
         
         return True
     
+    def stop_wrf(self):
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        c.terminate_wrf_real()
+        c.terminate_wrf()
+        
     def cleanup_wrf(self):
         '''Remove temporary files from WRF working directory '''
         if not self.verify():
@@ -626,6 +641,11 @@ class Env(object):
         
         return True
         
+    def stop_arwpost(self):
+        from aqmrpc.wrf.controller import ModelEnvController
+        c = ModelEnvController(self.envid)
+        
+        c.terminate_arwpost()
     
     def render_grads(self, gs_template):
         '''Generate GrADS files from model result with ARWpost'''

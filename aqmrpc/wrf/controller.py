@@ -120,8 +120,14 @@ class ModelEnvController(object):
         # has been closed properly
         time.sleep(1)
     
+    def terminate(self, socket_path):
+        ''' Terminate a Runner. '''
+        c = Controller(socket_path)
+        if c.connect():
+            c.terminate()
+    
     def resume(self, socket_path):
-        '''Resume wait for the specified runner'''
+        ''' Resume wait for the specified runner. '''
         self.wait(socket_path)
         
         # sleep for a while to make sure files opened by runner
@@ -154,6 +160,9 @@ class ModelEnvController(object):
         '''
         self.resume(self.wrf_real_socket_path)
         return self.check_wrf_real_result()
+    
+    def terminate_wrf_real(self):
+        self.terminate(self.wrf_real_socket_path)
     
     def wrf_real_is_running(self):
         '''check whether real.exe job is running by checking the pid file'''
@@ -196,6 +205,9 @@ class ModelEnvController(object):
         self.resume(self.wrf_socket_path)
         return self.check_wrf_result()
     
+    def terminate_wrf(self):
+        self.terminate(self.wrf_socket_path)
+        
     def wrf_is_running(self):
         '''check whether wrf job is running by checking the pid file'''
         return check_pidfile(self.wrf_pid_file)
@@ -235,6 +247,9 @@ class ModelEnvController(object):
         '''
         self.resume(self.wps_ungrib_socket_path)
         return self.check_wps_ungrib_result()
+        
+    def terminate_wps_ungrib(self):
+        self.terminate(self.wps_ungrib_socket_path)
         
     def wps_ungrib_is_running(self):
         '''check whether ungrib job is running by checking the pid file'''
@@ -276,6 +291,9 @@ class ModelEnvController(object):
         self.resume(self.wps_geogrid_socket_path)
         return self.check_wps_geogrid_result()
         
+    def terminate_wps_geogrid(self):
+        self.terminate(self.wps_geogrid_socket_path)
+        
     def wps_geogrid_is_running(self):
         '''check whether geogrid job is running by checking the pid file'''
         return check_pidfile(self.wps_ungrib_pid_file)
@@ -316,6 +334,9 @@ class ModelEnvController(object):
         self.resume(self.wps_metgrid_socket_path)
         return self.check_wps_metgrid_result()
         
+    def terminate_wps_metgrid(self):
+        self.terminate(self.wps_metgrid_socket_path)
+        
     def wps_metgrid_is_running(self):
         '''check whether metgrid job is running by checking the pid file'''
         return check_pidfile(self.wps_metgrid_pid_file)
@@ -355,6 +376,9 @@ class ModelEnvController(object):
         '''
         self.resume(self.arwpost_socket_path)
         return self.check_arwpost_result()
+        
+    def terminate_arwpost(self):
+        self.terminate(self.arwpost_socket_path)
         
     def wps_arwpost_is_running(self):
         '''check whether ARWpost job is running by checking the pid file'''
@@ -402,6 +426,10 @@ class Controller(object):
     def wait(self):
         '''wait until the other end close the socket'''
         self.send_command('wait')
+    
+    def terminate(self):
+        ''' Send Terminate command. '''
+        self.send_command('terminate')
     
     def __del__(self):
         self.close()

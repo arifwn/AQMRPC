@@ -8,7 +8,7 @@ from aqmrpc.models import CurrentJob
 from aqmrpc.jobs import manager as jobmanager
 
 class WRFRun(supervisor.BaseJob):
-    def __init__(self, name, data, callback=None, envid=None):
+    def __init__(self, data, callback=None, envid=None):
         '''
         WRF modeling job.
         data['name']: name identifying this job
@@ -26,9 +26,9 @@ class WRFRun(supervisor.BaseJob):
         self.env = None
         self.jobentry = None
         
-        # TODO: make the job persistent to disk in case of rpc server error
-
     def set_up(self):
+        # TODO: ask the web interface if the job is not canceled
+        
         # open wrf environment
         self.env = wrfenv.Env(self.envid)
         
@@ -41,54 +41,96 @@ class WRFRun(supervisor.BaseJob):
         self.env.set_namelist('WRF', self.data['WRFnamelist'])
         self.env.set_namelist('WPS', self.data['WPSnamelist'])
         
+        # increment job count
+        jobmanager.increment_job()
+        
         # TODO: create database entry for current wrf job
         self.jobentry = CurrentJob(name=self.name, envid=self.envid,
                                    job_type=self.__class__.__name__)
         self.jobentry.save()
         
-        # increment job count
-        jobmanager.increment_job()
-        
     
     def tear_down(self):
         # cleanup wrf environment
-    
-        # remove database entry for current wrf job
-        self.jobentry.delete()
         
         # decrement job count
         jobmanager.decrement_job()
+        
+        # remove database entry for current wrf job
+        self.jobentry.delete()
+        
+        # TODO: tell the web interface the job is finished
+        
     
     def process(self):
-        
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'prepare_wps'
         self.jobentry.save()
         self.env.prepare_wps()
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'run_wps'
         self.jobentry.save()
         self.env.run_wps()
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'cleanup_wps'
         self.jobentry.save()
         self.env.cleanup_wps()
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'prepare_wrf'
         self.jobentry.save()
         self.env.prepare_wrf()
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'run_wrf'
         self.jobentry.save()
         self.env.run_wrf()
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'cleanup_wrf'
         self.jobentry.save()
         self.env.cleanup_wrf()
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'run_arwpost'
         self.jobentry.save()
         self.env.run_arwpost(self.data['ARWpostnamelist'])
         
+        try:
+            self.jobentry = CurrentJob.objects.get(envid=self.envid)
+        except CurrentJob.DoesNotExist:
+            # job does not exist, probably canceled
+            return
         self.jobentry.step = 'run_grads'
         self.jobentry.save()
         self.env.render_grads(self.data['grads_template'])
@@ -141,8 +183,12 @@ class WRFResume(supervisor.BaseJob):
     
     def tear_down(self):
         # remove job entry from database
-        if self.jobentry is None:
+        if self.jobentry is not None:
+            # decrement job count
+            jobmanager.decrement_job()
+            
             self.jobentry.delete()
+            
     
     def process(self):
         # try to reconnect to running process

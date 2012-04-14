@@ -32,8 +32,8 @@ class RPCBehaviorTest(unittest.TestCase):
             envid = self.client.wrf.setupenv()
             self.assertEqual(envid, self.envid, 'Failed to create modeling environment!')
     
-    def tearDown(self):
-        self.assertTrue(self.client.wrf.cleanupenv(self.envid))
+    #def tearDown(self):
+    #    self.assertTrue(self.client.wrf.cleanupenv(self.envid))
 
     
     def testFilesystem(self):
@@ -94,6 +94,7 @@ class RPCBehaviorTest(unittest.TestCase):
         self.assertEqual(namelist_new_str, namelist_str)
     
     def testWRFjob(self):
+        from aqmrpc.wrf import environment as wrfenv
         from aqmrpc.grads import controller as grcon
         sample_gs_template = os.path.join(os.path.dirname(grcon.__file__), 'test/plot_all.gs')
         wps_namelist = os.path.join(os.path.dirname(wrfenv.__file__), 'namelist/test/namelist.wps')
@@ -112,7 +113,10 @@ class RPCBehaviorTest(unittest.TestCase):
         with open(sample_gs_template, 'r') as f:
             data['grads_template'] = f.read()
         
-        self,client.wrf.add_job(data, envid=1)
+        self.client.wrf.add_job(data, 1)
+    
+    def testWRFstopjob(self):
+        self.client.wrf.stop_job(1)
     
 
 class WRFEnvTest(unittest.TestCase):
@@ -237,5 +241,24 @@ class WRFEnvTest(unittest.TestCase):
             gs_tmp = f.read()
         self.env.render_grads(gs_tmp)
     
+   
+class UtilitiesTest(unittest.TestCase):
+    ''' Test various utility in aqmrpc system '''
     
+    def testRestAPI(self):
+        import json
+        from django.conf import settings
+        import rest.client
+        import aqmrpc
+        
+        c = rest.client.Connection(settings.AQMWEB_URL,
+                                   username=settings.AQMWEB_CREDENTIAL[0],
+                                   password=settings.AQMWEB_CREDENTIAL[1],
+                                   ca_certs=settings.SSL_CERT_CACERT,
+                                   user_agent_name='AQM RPC Server %s' % aqmrpc.__version__)
+        response = c.request_get('rest/chemdata/detail/1/')
+        data = json.loads(response['body'])
+        print response['body']
+        
+        self.assertEqual(data['name'], u'Test Emission Data')
     

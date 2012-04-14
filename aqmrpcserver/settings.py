@@ -7,12 +7,6 @@ ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
 
-# size of runner threadpool
-THREAD_POOL_DEFAULT_SIZE = 20 # handling network connectivity
-THREAD_POOL_CPUBOUND_SIZE = 2 # running external process & cpu intensive activity
-THREAD_POOL_NETBOUND_SIZE = 4 # separated from general IO since network proxy sometimes has limit on number of simultaneous connection
-THREAD_POOL_IOBOUND_SIZE = 4 # general i/o access
-
 MANAGERS = ADMINS
 
 DATABASES = {
@@ -131,6 +125,26 @@ INSTALLED_APPS = (
 SSL_CERT_CERT = './cert/cert.pem'
 SSL_CERT_KEY = './cert/key.pem'
 SSL_CERT_CACERT = './cert/cacert.pem'
+
+# size of runner threadpool
+THREAD_POOL_DEFAULT_SIZE = 20 # handling network connectivity
+THREAD_POOL_CPUBOUND_SIZE = 2 # running external process & cpu intensive activity
+THREAD_POOL_NETBOUND_SIZE = 4 # separated from general IO since network proxy sometimes has limit on number of simultaneous connection
+THREAD_POOL_IOBOUND_SIZE = 4 # general i/o access
+
+# directory settings
+AQM_MODEL_DIR = '/home/arif/AQMDir/master'
+AQM_WORKING_DIR = '/home/arif/AQMDir/working'
+AQM_PYTHON_BIN = '/usr/bin/python'
+import os.path
+AQM_CACHE_DIR =  os.path.join(AQM_MODEL_DIR, 'WRF_DATA/cache')
+# can be http or ftp, should be none if no remote cache configured
+AQM_REMOTE_CACHE = 'ftp://localhost/upload/cache/'
+GRADS_BIN = '/usr/local/bin/grads'
+
+AQMWEB_URL = 'https://aqm.sainsmograf.com:8000'
+AQMWEB_CREDENTIAL = ('localserver', 'letsdothisjobonceandforall')
+
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
