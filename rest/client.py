@@ -36,7 +36,7 @@ import mimetypes
 
 from cStringIO import StringIO
 
-class Connection:
+class Connection(object):
     def __init__(self, base_url, username=None, password=None, cache=None, ca_certs=None, user_agent_name=None):
         self.base_url = base_url
         self.username = username

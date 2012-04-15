@@ -247,15 +247,9 @@ class UtilitiesTest(unittest.TestCase):
     
     def testRestAPI(self):
         import json
-        from django.conf import settings
-        import rest.client
-        import aqmrpc
+        from aqmrpc.misc.rest_client import AQMConnection
         
-        c = rest.client.Connection(settings.AQMWEB_URL,
-                                   username=settings.AQMWEB_CREDENTIAL[0],
-                                   password=settings.AQMWEB_CREDENTIAL[1],
-                                   ca_certs=settings.SSL_CERT_CACERT,
-                                   user_agent_name='AQM RPC Server %s' % aqmrpc.__version__)
+        c = AQMConnection()
         response = c.request_get('rest/chemdata/detail/1/')
         data = json.loads(response['body'])
         print response['body']
