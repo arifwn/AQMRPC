@@ -122,6 +122,9 @@ INSTALLED_APPS = (
     'aqmrpc',
 )
 
+# this server id
+AQM_SERVER_ID = 1
+
 SSL_CERT_CERT = './cert/cert.pem'
 SSL_CERT_KEY = './cert/key.pem'
 SSL_CERT_CACERT = './cert/cacert.pem'
