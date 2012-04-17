@@ -1,0 +1,10 @@
+TODO List
+=========
+
+* Implement periodic / event-based job request to consume available job from
+  AQM Web Interface.
+* Implement a mechanism to queue update to the web interface if the web
+  interface is unreachable.
+* Implement a mechanism to restart RPC server without killing running job.
+  Should not be difficult since the runner already support this behaviour.
+  

@@ -24,6 +24,9 @@ while (count < _endtime)
   'c'
   'set mpdset hires'
   'set t 'count
+  
+  rec=sublin(result,1)
+  timestr=subwrd(rec,4)
 
   'set gxout shaded'
   'set csmooth on'
@@ -32,8 +35,8 @@ while (count < _endtime)
   'set gxout contour'
   'd u;v'
 
-  'draw title [T 'num%']'
-  'printim {{ output_dir }}/t_'%num%'.png white'
+  'draw title 'timestr
+  'printim {{ output_dir }}/t_'%num%'_'%timestr%'.png white'
 
   count = count + 1
 endwhile
