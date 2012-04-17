@@ -256,3 +256,10 @@ class UtilitiesTest(unittest.TestCase):
         
         self.assertEqual(data['name'], u'Test Emission Data')
     
+    def testConfirmJob(self):
+        from aqmrpc.misc.rest_client import command_confirm_run
+        
+        ret = command_confirm_run(1)
+        self.assertEqual(ret, True)
+        
+    

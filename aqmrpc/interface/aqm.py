@@ -87,12 +87,11 @@ class WRF(xmlrpc.XMLRPC):
     
     def xmlrpc_stop_job(self, envid):
         import aqmrpc.jobs.manager
-        #try:
-        #    aqmrpc.jobs.manager.stop_wrf_job(envid)
-        #    return True
-        #except:
-        #    return False
-        aqmrpc.jobs.manager.stop_wrf_job(envid)
+        try:
+            aqmrpc.jobs.manager.stop_wrf_job(envid)
+            return True
+        except:
+            return False
         
     def xmlrpc_setupenv(self, envid=None):
         ''' 

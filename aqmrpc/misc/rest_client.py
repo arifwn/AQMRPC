@@ -30,5 +30,23 @@ def command(command, data=None):
     body_encoded = urllib.urlencode(body)
     
     c = AQMConnection()
-    response = c.request_post('rest/m2m', body=body_encoded)
-    return response
+    response = c.request_post('rest/m2m/', body=body_encoded)
+    
+    if response['headers']['status'] == '200':
+        if response['headers']['content-type'] == 'application/json; charset=utf-8':
+            
+            return json.loads(response['body'])
+        else:
+            return response['body']
+    else:
+        raise IOError(response['headers']['status'])
+
+def command_confirm_run(task_id):
+    return command('confirm_run', {'task_id': task_id})
+    
+def command_report_run_stage(task_id, envid, stage):
+    return command('report_run_stage', {'task_id': task_id, 'envid': envid, 'stage': stage})
+    
+def command_job_finished(task_id):
+    return command('job_finished', {'task_id': task_id})
+    

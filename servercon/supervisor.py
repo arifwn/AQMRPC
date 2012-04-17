@@ -55,7 +55,7 @@ class BaseJob(object):
         self.results = {}
     
     def set_up(self):
-        pass
+        return True
     
     def process(self):
         raise NotImplementedError()
@@ -128,12 +128,13 @@ class SupervisorThread(threading.Thread):
         log.msg('[runner] processing job: %s <%s>' % (job_name, job.__class__.__name__))
         
         if set_up is not None:
+            is_continue = False
             try:
-                set_up()
+                is_continue = set_up()
             except Exception as e:
                 log.err(e, '[runner] Exception in job set_up()')
         
-        if process is not None:
+        if (process is not None) and is_continue:
             try:
                 process()
             except Exception as e:

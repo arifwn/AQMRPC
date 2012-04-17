@@ -118,7 +118,10 @@ class Connection(object):
             headers['Content-Length'] = str(len(body))        
         else: 
             headers['Content-Type']='text/xml'
-            
+        
+        if method.upper() == 'POST':
+            headers['Content-Type']='application/x-www-form-urlencoded'
+        
         if args:
             path += u"?" + urllib.urlencode(args)
             

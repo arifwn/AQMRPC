@@ -1,5 +1,6 @@
 '''
 '''
+from twisted.python import log
 
 from aqmrpc.wrf import environment as wrfenv
 from servercon import supervisor
@@ -7,12 +8,14 @@ from servercon import supervisor
 from aqmrpc.models import CurrentJob
 from aqmrpc.jobs import manager as jobmanager
 
+from aqmrpc.misc.rest_client import command_confirm_run, command_report_run_stage, command_job_finished
+
 class WRFRun(supervisor.BaseJob):
     def __init__(self, data, callback=None, envid=None):
         '''
         WRF modeling job.
         data['name']: name identifying this job
-        data['id']: task id from web interface
+        data['task_id']: task id from web interface
         data['WRFnamelist']: WRF namelist string data
         data['WPSnamelist']: WPS namelist string data
         data['ARWpostnamelist']: ARWpost namelist string data
@@ -28,12 +31,23 @@ class WRFRun(supervisor.BaseJob):
         
     def set_up(self):
         # TODO: ask the web interface if the job is not canceled
+        try:
+            ret = command_confirm_run(self.data['task_id'])
+        except Exception, e:
+            log.err(e, '[Job] Exception in command_confirm_run')
+            return False
+        
+        if ret != True:
+            return False
         
         # open wrf environment
         self.env = wrfenv.Env(self.envid)
         
         # creates the environment
         self.env.setup()
+        
+        if self.envid is None:
+            self.envid = self.env.envid
         
         # TODO: setup log rotation
         
@@ -49,6 +63,14 @@ class WRFRun(supervisor.BaseJob):
                                    job_type=self.__class__.__name__)
         self.jobentry.save()
         
+        stage = 'Model Preparation'
+        try:
+            command_report_run_stage(self.data['task_id'], self.envid, stage)
+        except Exception, e:
+            log.err(e, '[Job] Exception in command_report_run_stage')
+            
+        return True
+        
     
     def tear_down(self):
         # cleanup wrf environment
@@ -58,8 +80,13 @@ class WRFRun(supervisor.BaseJob):
         
         # remove database entry for current wrf job
         self.jobentry.delete()
-        
+    
+    def callback(self):
         # TODO: tell the web interface the job is finished
+        try:
+            ret = command_job_finished(self.data['task_id'])
+        except Exception, e:
+            log.err(e, '[Job] Exception in command_job_finished')
         
     
     def process(self):
@@ -71,6 +98,13 @@ class WRFRun(supervisor.BaseJob):
         self.jobentry.step = 'prepare_wps'
         self.jobentry.save()
         self.env.prepare_wps()
+        
+        
+        stage = 'WPS'
+        try:
+            command_report_run_stage(self.data['task_id'], self.envid, stage)
+        except Exception, e:
+            log.err(e, '[Job] Exception in command_report_run_stage')
         
         try:
             self.jobentry = CurrentJob.objects.get(envid=self.envid)
@@ -90,6 +124,13 @@ class WRFRun(supervisor.BaseJob):
         self.jobentry.save()
         self.env.cleanup_wps()
         
+        
+        stage = 'WRF'
+        try:
+            command_report_run_stage(self.data['task_id'], self.envid, stage)
+        except Exception, e:
+            log.err(e, '[Job] Exception in command_report_run_stage')
+            
         try:
             self.jobentry = CurrentJob.objects.get(envid=self.envid)
         except CurrentJob.DoesNotExist:
@@ -117,6 +158,12 @@ class WRFRun(supervisor.BaseJob):
         self.jobentry.save()
         self.env.cleanup_wrf()
         
+        stage = 'ARWpost'
+        try:
+            command_report_run_stage(self.data['task_id'], self.envid, stage)
+        except Exception, e:
+            log.err(e, '[Job] Exception in command_report_run_stage')
+            
         try:
             self.jobentry = CurrentJob.objects.get(envid=self.envid)
         except CurrentJob.DoesNotExist:
