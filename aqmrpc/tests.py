@@ -118,6 +118,11 @@ class RPCBehaviorTest(unittest.TestCase):
     def testWRFstopjob(self):
         self.client.wrf.stop_job(1)
     
+    
+    def testGetPlot(self):
+        res = self.client.wrf.get_plot(5, 1)
+        print res, len(res)
+    
 
 class WRFEnvTest(unittest.TestCase):
     '''
@@ -261,5 +266,5 @@ class UtilitiesTest(unittest.TestCase):
         
         ret = command_confirm_run(1)
         self.assertEqual(ret, True)
-        
+    
     

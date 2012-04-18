@@ -6,7 +6,6 @@ Created on Jan 26, 2012
 import time
 import xmlrpclib
 import os
-import os.path
 import glob
 
 from twisted.web import xmlrpc
@@ -92,7 +91,18 @@ class WRF(xmlrpc.XMLRPC):
             return True
         except:
             return False
+    
+    def xmlrpc_get_plot(self, envid, domain):
+        ''' Return a list of png file with path relative to envid path. '''
+        env_path = wrfenv.working_path(envid)
+        arwpost_path = wrfenv.program_path(envid, 'ARWpost')
         
+        png_files = glob.glob('%s/render_%02d/*.png' % (arwpost_path, domain))
+        png_files.sort()
+        
+        file_list = [os.path.relpath(png_path, env_path) for png_path in png_files]
+        return file_list
+    
     def xmlrpc_setupenv(self, envid=None):
         ''' 
         Create a new modeling environment. 
