@@ -25,7 +25,7 @@
  io_form_restart                       = 2,
  io_form_input                         = 2,
  io_form_boundary                      = 2,
- io_form_auxinput5                     = 0,
+ io_form_auxinput5                     = 2,
  io_form_auxinput6                     = 0,
  io_form_auxinput7                     = 0,
  io_form_auxinput8                     = 0,
