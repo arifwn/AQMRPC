@@ -1,6 +1,7 @@
 TODO List
 =========
-
+* Download new geo data set for wrf 3.4: http://www.mmm.ucar.edu/wrf/users/download/get_source.html
+* find and download grib2ctl.pl
 * Implement periodic / event-based job request to consume available job from
   AQM Web Interface.
 * Implement a mechanism to queue update to the web interface if the web
