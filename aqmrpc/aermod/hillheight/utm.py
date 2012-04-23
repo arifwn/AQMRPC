@@ -151,6 +151,6 @@ if __name__ == '__main__':
     hem = 'S'
     print get_zone_hem(lat, lon), clean_lon(-180.0 + (6.0 * (zone - 1))) + 3.0
     print convert_to_utm(lat, lon)
-    print convert_to_utm_fixzone(lat, lon, 48, 2)
+    print convert_to_utm_fixzone(lat, lon, 48, 'S')
     print convert_to_latlon(easting, northing, zone, hem)
     
