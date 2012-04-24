@@ -50,3 +50,6 @@ def command_report_run_stage(task_id, envid, stage):
 def command_job_finished(task_id):
     return command('job_finished', {'task_id': task_id})
     
+def command_job_error(task_id, error_log):
+    return command('job_error', {'task_id': task_id, 'error_log': error_log})
+    
