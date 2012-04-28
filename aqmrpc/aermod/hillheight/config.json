@@ -1,0 +1,40 @@
+{
+    "ref_lat": -7.0,
+    "ref_lon": 107.0,
+    "srtm_dir": "/home/arif/AQMDir/master/WRF_DATA/srtm/",
+    "srtm_data": [
+        {
+            "filename": "S07E107.hgt.zip",
+            "lat": -7.0,
+            "lon": 107.0
+        },
+        {
+            "filename": "S07E106.hgt.zip",
+            "lat": -7.0,
+            "lon": 106.0
+        },
+        {
+            "filename": "S08E107.hgt.zip",
+            "lat": -8.0,
+            "lon": 107.0
+        },
+        {
+            "filename": "S08E106.hgt.zip",
+            "lat": -8.0,
+            "lon": 106.0
+        }
+    ],
+    "modelgrid": [
+        {
+            "x": -500,
+            "y": -500,
+            "delta_x": 100,
+            "delta_y": 100,
+            "w": 10,
+            "h": 10,
+            "base_elevation": 0
+        }
+    ],
+    "save_path": "./test.json",
+    "image_path": "./test.png"
+}
