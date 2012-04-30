@@ -2,6 +2,7 @@
     "ref_lat": -7.0,
     "ref_lon": 107.0,
     "srtm_dir": "/home/arif/AQMDir/master/WRF_DATA/srtm/",
+    "padding": "1PAD.hgt.zip",
     "srtm_data": [
         {
             "filename": "S07E107.hgt.zip",

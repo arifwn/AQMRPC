@@ -1,0 +1,34 @@
+{
+    "output_dir": "./test",
+    "output": "test.met",
+    "input_dir": "./test",
+    "start_time": {
+        "year": 2010,
+        "month": 10,
+        "day": 14,
+        "hour": 0,
+        "minute": 0,
+        "second": 0
+    },
+    "time_length": 24,
+    "zsize": 27,
+    "upper_air": {
+        "pressure": "vert_pressure.txt",
+        "seapressure": "vert_seapressure.txt",
+        "temp": "vert_temp.txt",
+        "windir": "vert_windir.txt",
+        "windspeed": "vert_winspeed.txt",
+        "elevation": "vert_surfaceelevation.txt",
+        "dewtemp": "vert_dewtemp.txt",
+        "height": "vert_height.txt"
+    },
+    "surface": {
+        "pressure": "sfc_pressure.txt",
+        "seapressure": "sfc_seapressure.txt",
+        "temp": "sfc_temp.txt",
+        "dewtemp": "sfc_dewtemp.txt",
+        "relhumid": "sfc_relhumid.txt",
+        "windir": "sfc_windir.txt",
+        "windspeed": "sfc_winspeed.txt"
+    }
+}

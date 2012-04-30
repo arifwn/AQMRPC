@@ -685,7 +685,7 @@ def verify_id(envid):
 
 def working_path(envid):
     '''Return base path of the modeling environment identified with id.''' 
-    return path.join(aqmsettings.AQM_WORKING_DIR, str(envid))
+    return path.join(aqmsettings.AQM_WORKING_DIR, 'WRF', str(envid))
 
 def program_path(envid, program):
     return path.join(working_path(str(envid)), program)

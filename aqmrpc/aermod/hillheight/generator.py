@@ -45,7 +45,8 @@ class ModelGrid(object):
 
 
 class HillHeight(object):
-    def __init__(self, ref_lat, ref_lon):
+    def __init__(self, ref_lat, ref_lon, padding_file=None):
+        self.padding_file = padding_file
         self.srtm_data = []
         self.model_grids = []
         self.ref_lat = ref_lat
@@ -54,14 +55,29 @@ class HillHeight(object):
         self.ref_easting, self.ref_northing = utm.convert_to_utm_fixzone(ref_lat, ref_lon, self.zone, self.hemisphere)
     
     def add_srtm_file(self, file_path, lat, lon, zipped=True):
-        if zipped:
-            zip_file = zipfile.ZipFile(file_path, 'r')
+        logger = logging.getLogger('runner')
+        try:
+            os.stat(file_path)
+            
+            if zipped:
+                zip_file = zipfile.ZipFile(file_path, 'r')
+                zip_file_name = zip_file.namelist()[0]
+                hgt_string = zip_file.read(zip_file_name)
+                zip_file.close()
+            else:
+                srtm_file = open(file_path, 'rb')
+                hgt_string = srtm_file.read()
+                srtm_file.close()
+        except OSError:
+            logger.error('SRTM File not found: %s', file_path)
+            if self.padding_file is None:
+                raise OSError('cannot access SRTM File: %s' % file_path)
+            
+            logger.info('substitute with padding file: %s', self.padding_file)
+            zip_file = zipfile.ZipFile(self.padding_file, 'r')
             zip_file_name = zip_file.namelist()[0]
             hgt_string = zip_file.read(zip_file_name)
             zip_file.close()
-        else:
-            srtm_file = open(file_path, 'rb')
-            hgt_string = srtm_file.read()
         
         hgt_data = {}
         # srtm data start from lower left
@@ -249,7 +265,7 @@ class HillHeight(object):
         # setup mercator map projection.
         m = Basemap(llcrnrlon=min_lon,llcrnrlat=min_lat,urcrnrlon=max_lon,urcrnrlat=max_lat,\
                     rsphere=(6378137.00,6356752.3142),\
-                    resolution='h',projection='merc',\
+                    resolution='i',projection='merc',\
                     lat_0=self.ref_lat,lon_0=self.ref_lon,lat_ts=abs(self.ref_lat))
         
         for srtm in self.srtm_data:
@@ -290,7 +306,7 @@ class HillHeight(object):
         meridians = numpy.arange(10.,360.,30.)
         m.drawmeridians(meridians,labels=[1,0,0,1])
         # add colorbar
-        #cb = m.colorbar(im,"right", size="5%", pad='2%')
+        cb = m.colorbar(im,"right", size="5%", pad='2%')
         ax.set_title('AERMOD Grid Configuration')
         fig.savefig(target_path)
         
@@ -300,17 +316,17 @@ def compute_distance(x1, y1, x2, y2):
     dy = y1 - y2;
     return math.sqrt(dx * dx + dy * dy);
 
-def run():
+def run(config_file='./config.json'):
     FORMAT = '[%(asctime)-15s] [%(levelname)s] [%(lineno)d] %(message)s'
     logging.basicConfig(format=FORMAT)
     logger = logging.getLogger('runner')
     logger.setLevel(logging.DEBUG)
     
-    with open('config.json', 'r') as f:
+    with open(config_file, 'r') as f:
         config = json.load(f)
     
     logger.info('latitude / longitude: (%f, %f)', config['ref_lat'], config['ref_lon'])
-    hh = HillHeight(config['ref_lat'], config['ref_lon'])
+    hh = HillHeight(config['ref_lat'], config['ref_lon'], os.path.join(config['srtm_dir'], config['padding']))
     
     # add srtm data
     for srtm_info in config['srtm_data']:
@@ -327,7 +343,7 @@ def run():
                           grid_info['base_elevation'])
     
     logger.info('saving image...')
-    hh.save_image(config['image_path'], 0.5, 0.5)
+    hh.save_image(config['image_path'], 2, 2)
     
     logger.info('processing...')
     hh.process()
@@ -338,5 +354,13 @@ def run():
     logger.info('done')
     
 if __name__ == '__main__':
-    run()
+    # use config file path as command line argument
+    import sys
+    
+    config_file = './config.json'
+    #if len(sys.argv) < 2:
+    #    exit(-1)
+    #config_file = sys.argv[1]
+    
+    run(config_file)
     
