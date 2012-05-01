@@ -2,6 +2,7 @@
 import datetime
 import logging
 import json
+import os
 
 import numpy
 
@@ -129,7 +130,7 @@ class Plotter(object):
             self.timeseries_data[date_key] = tmp
             #logger.info('%s', self.timeseries_data[date_key][0][0]['date'])
     
-    def plot(self, output_dir):
+    def plot(self, output_dir, scalemap=None):
         from mpl_toolkits.basemap import Basemap, cm
         import matplotlib.pyplot as plt
         from matplotlib.patches import Polygon
@@ -142,6 +143,70 @@ class Plotter(object):
         
         for date_key in self.timeseries_data.iterkeys():
             logger.info('plotting: %s', date_key)
+            data = self.timeseries_data[date_key]
+            data_w = self.timeseries_dimension[date_key]['w']
+            data_h = self.timeseries_dimension[date_key]['h']
+            
+            # concentration data
+            conc = numpy.array([])
+            conc.resize((data_h, data_w))
+            # elevation data
+            elev = numpy.array([])
+            elev.resize((data_h, data_w))
+            #logger.info('%s', conc.shape)
+            for y in xrange(data_h):
+                for x in xrange(data_w):
+                    conc[y][x] = data[y][x]['conc']
+                    elev[y][x] = data[y][x]['elev']
+                    #logger.info('%s', data[y][x]['conc'])
+            
+            dx = (data[0][data_w - 1]['x'] - data[0][0]['x']) / (data_w - 1)
+            dy = (data[data_h - 1][0]['y'] - data[0][0]['y']) / (data_h - 1)
+            #logger.info('dx: %s, dy: %s ', dx, dy)
+            
+            lower_easting = ref_easting + data[0][0]['x']
+            lower_northing = ref_northing + data[0][0]['y']
+            upper_easting = ref_easting + data[0][data_w - 1]['x']
+            upper_northing = ref_northing + data[data_h - 1][0]['y']
+            #upper_easting = lower_easting + (data_w - 1) * dx
+            #upper_northing = lower_northing + (data_h - 1) * dy
+            #logger.info('%s', (lower_easting, lower_northing, upper_easting, upper_northing))
+            
+            lower_lat, lower_lon = utm.convert_to_latlon(lower_easting, lower_northing, zone, hem)
+            upper_lat, upper_lon = utm.convert_to_latlon(upper_easting, upper_northing, zone, hem)
+            #logger.info('%s', (lower_lat, lower_lon, upper_lat, upper_lon))
+            
+            # create the figure and axes instances.
+            fig = plt.figure()
+            ax = fig.add_axes([0.1,0.1,0.8,0.8])
+            # setup mercator map projection.
+            m = Basemap(llcrnrlon=lower_lon,llcrnrlat=lower_lat,urcrnrlon=upper_lon,urcrnrlat=upper_lat,\
+                        rsphere=(6378137.00,6356752.3142),\
+                        resolution='i',projection='merc',\
+                        lat_0=self.ref_lat,lon_0=self.ref_lon,lat_ts=abs(self.ref_lat))
+            ax.set_title('%s\n%s' % (self.plot_title, data[0][0]['date']))
+            parallels = numpy.arange(0.,80,20.)
+            m.drawparallels(parallels,labels=[1,0,0,1])
+            meridians = numpy.arange(10.,360.,30.)
+            m.drawmeridians(meridians,labels=[1,0,0,1])
+            
+            lats = (lower_lat + ((upper_lat - lower_lat)/(data_h - 1)) * numpy.indices((data_h, data_w))[0,:,:])
+            lons = (lower_lon + ((upper_lon - lower_lon)/(data_w - 1)) * numpy.indices((data_h, data_w))[1,:,:])
+            #logger.info('%s', lons)
+            x, y = m(lons, lats)
+            im = m.contour(x, y, elev, cmap=cm.GMT_relief)
+            if scalemap is None:
+                clevs = [0,2,5,15,50,80,150,300,750,1500,2500]
+            else:
+                clevs = scalemap
+            im = m.contourf(x, y, conc, clevs, cmap=cm.s3pcpn)
+            #im = m.contourf(x, y, conc, cmap=cm.s3pcpn)
+            cb = m.colorbar(im, "bottom", size="5%", pad='2%')
+            cb.set_label('microgram / m^3')
+            
+            filename = os.path.join(output_dir, '%s.png' % date_key)
+            fig.savefig(filename)
+            
             ## compute map projection coordinates of grid.
             #lats = (srtm['lat'] + (1.0/1200.0) * numpy.indices((1201,1201))[0,:,:])
             #lons = (srtm['lon'] + (1.0/1200.0) * numpy.indices((1201,1201))[1,:,:])
@@ -162,7 +227,7 @@ def run(config_file='./config.json'):
     
     plotter = Plotter(config['plt_file'], config['ref_lat'], config['ref_lon'])
     plotter.read_data()
-    plotter.plot(config['output_dir'])
+    plotter.plot(config['output_dir'], config['scalemap'])
 
 if __name__ == '__main__':
     # use config file path as command line argument
