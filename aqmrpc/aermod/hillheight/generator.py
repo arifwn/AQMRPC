@@ -7,6 +7,7 @@ import logging
 import math
 import os
 import zipfile
+from cStringIO import StringIO
 
 import numpy
 
@@ -53,6 +54,8 @@ class HillHeight(object):
         self.ref_lon = ref_lon
         self.zone, self.hemisphere = utm.get_zone_hem(ref_lat, ref_lon)
         self.ref_easting, self.ref_northing = utm.convert_to_utm_fixzone(ref_lat, ref_lon, self.zone, self.hemisphere)
+        
+        self.source_locations = []
     
     def add_srtm_file(self, file_path, lat, lon, zipped=True):
         logger = logging.getLogger('runner')
@@ -173,6 +176,29 @@ class HillHeight(object):
         logger.debug('elevation: %f, %f, %f', lat, lon, elevation)
         return elevation
     
+    def get_elevation_utm(self, x, y):
+        '''
+        Obtain elevation for (x, y) position (coordinate in m) relative
+        from ref coordinate.
+        Return None if data not available.
+        '''
+        easting  = y + self.ref_easting
+        northing  = x + self.ref_northing
+        lat, lon = utm.convert_to_latlon(easting, northing, self.zone, self.hemisphere)
+        return self.get_elevation(lat, lon)
+    
+    def get_elevation(self, lat, lon):
+        elevation = None
+        
+        for srtm in self.srtm_data:
+            # determine which srtm data contains this coordinate
+            if ((srtm['lat'] + 1) >= lat) and (srtm['lat'] <= lat) and ((srtm['lon'] + 1) >= lon) and (srtm['lon'] <= lon):
+                # compute correct grid position
+                lat_index = int((lat - srtm['lat']) / (1.0 / 1200.0))
+                lon_index = int((lon - srtm['lon']) / (1.0 / 1200.0))
+                elevation = srtm['data'][lat_index][lon_index]
+        return elevation
+    
     def process(self):
         ''' Compute hillheight data from all srtm data. '''
         logger = logging.getLogger('runner')
@@ -245,9 +271,83 @@ class HillHeight(object):
         
         data['elevations'] = elevation_list
         data['hillheights'] = hillheight_list
+        data['source_location'] = []
+        for source in self.source_locations:
+            src_data = {}
+            src_data['x'] = source['x']
+            src_data['y'] = source['y']
+            src_data['elevation'] = float(self.get_elevation_utm(source['x'], source['y']))
+            data['source_location'].append(src_data)
         
         with open(target_path, 'w') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
+    
+    def save_re(self, target_path):
+        logger = logging.getLogger('runner')
+        
+        # just for debugging purpose
+        #with open('./test.json', 'r') as f:
+        #    data = json.load(f)
+        #    for i, grid in enumerate(self.model_grids):
+        #        for y in xrange(grid.h):
+        #            for x in xrange(grid.w):
+        #                grid.set_elevation(x, y, data['elevations'][i][x][y])
+        #                grid.set_hillheight(x, y, data['hillheights'][i][x][y])
+        #    
+        #        logger.info('elevation (0,0): %s', grid.get_elevation(0, 0))
+        
+        bfr = StringIO()
+        bfr.write('**\n')
+        bfr.write('RE STARTING\n')
+        
+        bfr.write('RE ELEVUNIT METERS\n')
+        
+        for i, grid in enumerate(self.model_grids):
+            bfr.write('RE GRIDCART CART%d STA\n' % (i + 1))
+            bfr.write('                   XYINC %.2f %d %.2f %.2f %d %.2f\n' % (grid.x, grid.w, grid.delta_x,
+                                                               grid.y, grid.w, grid.delta_y,))
+            
+            item_per_line = 10
+            
+            # elevation data
+            for y in xrange(grid.h):
+                n_line = int(math.ceil(float(grid.w) / item_per_line))
+                x = 0
+                for line in xrange(n_line):
+                    logger.info('elev')
+                    bfr.write('                   ELEV %d' % (y + 1))
+                    for i_inline in xrange(item_per_line):
+                        if x == grid.w:
+                            break
+                        logger.info('%s %s %s' % (i_inline, x, y))
+                        bfr.write(' %.2f' % grid.get_elevation(x, y))
+                        x += 1
+                    bfr.write('\n')
+            
+            # hillheight data
+            for y in xrange(grid.h):
+                n_line = int(math.ceil(float(grid.w) / item_per_line))
+                x = 0
+                for line in xrange(n_line):
+                    logger.info('elev')
+                    bfr.write('                   HILL %d' % (y + 1))
+                    for i_inline in xrange(item_per_line):
+                        if x == grid.w:
+                            break
+                        logger.info('%s %s %s' % (i_inline, x, y))
+                        bfr.write(' %.2f' % grid.get_hillheight(x, y))
+                        x += 1
+                    bfr.write('\n')
+                
+                
+            bfr.write('                   END\n')
+        
+        bfr.write('RE FINISHED\n')
+        bfr.write('**\n')
+        
+        with open(target_path, 'w') as f:
+            f.write(bfr.getvalue())
+        
     
     def save_image(self, target_path, width=4, height=4):
         from mpl_toolkits.basemap import Basemap, cm
@@ -342,6 +442,10 @@ def run(config_file='./config.json'):
                           grid_info['w'], grid_info['h'],
                           grid_info['base_elevation'])
     
+    logger.info('0, 0: %f', hh.get_elevation_utm(0, 0))
+    
+    hh.source_locations = config['source_location']
+    
     logger.info('saving image...')
     hh.save_image(config['image_path'], 2, 2)
     
@@ -350,6 +454,7 @@ def run(config_file='./config.json'):
     
     logger.info('saving...')
     hh.save(config['save_path'])
+    hh.save_re(config['save_re_path'])
     
     logger.info('done')
     

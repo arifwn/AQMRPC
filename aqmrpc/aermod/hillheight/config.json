@@ -36,6 +36,13 @@
             "base_elevation": 0
         }
     ],
-    "save_path": "./test.json",
-    "image_path": "./test.png"
+    "source_location": [
+        {
+            "x": 0,
+            "y": 0
+        }
+    ],
+    "save_path": "./test/output.json",
+    "save_re_path": "./test/aermod_re.inp",
+    "image_path": "./test/grid.png"
 }

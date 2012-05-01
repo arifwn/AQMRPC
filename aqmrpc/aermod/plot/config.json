@@ -1,0 +1,6 @@
+{
+    "plt_file": "./test/OUTPUT_1H.PST",
+    "output_dir": "./test/plot/",
+    "ref_lat": -7.0,
+    "ref_lon": 107.0
+}

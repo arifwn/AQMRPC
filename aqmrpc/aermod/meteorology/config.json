@@ -1,16 +1,22 @@
 {
     "output_dir": "./test",
-    "output": "test.met",
+    "output": "DATA.MET",
     "input_dir": "./test",
     "start_time": {
-        "year": 2010,
-        "month": 10,
-        "day": 14,
+        "year": 1993,
+        "month": 7,
+        "day": 1,
         "hour": 0,
         "minute": 0,
         "second": 0
     },
-    "time_length": 24,
+    "timezone": -7,
+    "location": {
+        "id": 1,
+        "lat": -7,
+        "lon": 107
+    },
+    "time_length": 48,
     "zsize": 27,
     "upper_air": {
         "pressure": "vert_pressure.txt",
