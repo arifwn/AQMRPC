@@ -1,0 +1,21 @@
+{
+    "data_file": "./test/data_grid_co_nh3.xlsx",
+    "namelist_wps": "./test/namelist.wps",
+    "output_dir": "./test/",
+    "grid_w": 99,
+    "grid_h": 99,
+    "pollutants": [
+        {
+            "pollutant": "e_co",
+            "conversion_factor": 0.00011415525114155251,
+            "worksheet": 0,
+            "row_start": 2,
+            "row_end": 9802,
+            "emission_column": "I",
+            "lat_column": "C",
+            "lon_column": "B",
+            "x_column": "D",
+            "y_column": "E"
+        }
+    ]
+}
