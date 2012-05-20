@@ -180,7 +180,7 @@ class HillHeight(object):
         '''
         Obtain elevation for (x, y) position (coordinate in m) relative
         from ref coordinate.
-        Return None if data not available.
+        Return -9999 if data not available.
         '''
         easting  = y + self.ref_easting
         northing  = x + self.ref_northing
@@ -188,7 +188,7 @@ class HillHeight(object):
         return self.get_elevation(lat, lon)
     
     def get_elevation(self, lat, lon):
-        elevation = None
+        elevation = -9999
         
         for srtm in self.srtm_data:
             # determine which srtm data contains this coordinate
@@ -197,6 +197,7 @@ class HillHeight(object):
                 lat_index = int((lat - srtm['lat']) / (1.0 / 1200.0))
                 lon_index = int((lon - srtm['lon']) / (1.0 / 1200.0))
                 elevation = srtm['data'][lat_index][lon_index]
+        
         return elevation
     
     def process(self):
@@ -211,8 +212,9 @@ class HillHeight(object):
                     elevation = self.modelgrid_get_elevation(grid, x, y)
                     grid.set_elevation(x, y, elevation)
                     
-                    if elevation < -9998:
+                    if elevation == -9999:
                         # blank data, do not compute hillheight
+                        logger.debug('blank')
                         grid.set_hillheight(x, y, -9999)
                         continue
                     
@@ -314,12 +316,11 @@ class HillHeight(object):
                 n_line = int(math.ceil(float(grid.w) / item_per_line))
                 x = 0
                 for line in xrange(n_line):
-                    logger.info('elev')
                     bfr.write('                   ELEV %d' % (y + 1))
                     for i_inline in xrange(item_per_line):
                         if x == grid.w:
                             break
-                        logger.info('%s %s %s' % (i_inline, x, y))
+                        # logger.info('%s %s %s' % (i_inline, x, y))
                         bfr.write(' %.2f' % grid.get_elevation(x, y))
                         x += 1
                     bfr.write('\n')
@@ -329,12 +330,11 @@ class HillHeight(object):
                 n_line = int(math.ceil(float(grid.w) / item_per_line))
                 x = 0
                 for line in xrange(n_line):
-                    logger.info('elev')
                     bfr.write('                   HILL %d' % (y + 1))
                     for i_inline in xrange(item_per_line):
                         if x == grid.w:
                             break
-                        logger.info('%s %s %s' % (i_inline, x, y))
+                        # logger.info('%s %s %s' % (i_inline, x, y))
                         bfr.write(' %.2f' % grid.get_hillheight(x, y))
                         x += 1
                     bfr.write('\n')
