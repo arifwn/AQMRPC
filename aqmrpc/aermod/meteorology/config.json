@@ -1,6 +1,5 @@
 {
-    "output_dir": "./test",
-    "output": "DATA.MET",
+    "output_path": "./test/DATA.MET",
     "input_dir": "./test",
     "start_time": {
         "year": 1993,

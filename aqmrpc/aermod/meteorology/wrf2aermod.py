@@ -78,7 +78,7 @@ import numpy
 
 class WRFtoAERMOD(object):
     def __init__(self, config):
-        self.output_path = os.path.join(config['output_dir'], config['output'])
+        self.output_path = config['output_path']
         
         self.vert_pressure_path = os.path.join(config['input_dir'], config['upper_air']['pressure'])
         self.vert_seapressure_path = os.path.join(config['input_dir'], config['upper_air']['seapressure'])
