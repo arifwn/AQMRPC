@@ -17,7 +17,7 @@ class AQMConnection(rest.client.Connection):
                                    user_agent_name='AQM RPC Server %s' % aqmrpc.__version__)
 
 
-def command(command, data=None):
+def command(command, data=None, resource='rest/wrf/m2m/'):
     ''' Send command to machine-to-machine rest handler. '''
     body = {}
     body_encoded = None
@@ -30,7 +30,7 @@ def command(command, data=None):
     body_encoded = urllib.urlencode(body)
     
     c = AQMConnection()
-    response = c.request_post('rest/m2m/', body=body_encoded)
+    response = c.request_post(resource, body=body_encoded)
     
     if response['headers']['status'] == '200':
         if response['headers']['content-type'] == 'application/json; charset=utf-8':
@@ -41,15 +41,21 @@ def command(command, data=None):
     else:
         raise IOError(response['headers']['status'])
 
-def command_confirm_run(task_id):
-    return command('confirm_run', {'task_id': task_id})
+def wrf_command(command, data=None):
+    return command(command, data, 'rest/wrf/m2m/')
+
+def aermod_command(command, data=None):
+    return command(command, data, 'rest/aermod/m2m/')
+
+def command_wrf_confirm_run(task_id):
+    return wrf_command('confirm_run', {'task_id': task_id})
     
-def command_report_run_stage(task_id, envid, stage):
-    return command('report_run_stage', {'task_id': task_id, 'envid': envid, 'stage': stage})
+def command_wrf_report_run_stage(task_id, envid, stage):
+    return wrf_command('report_run_stage', {'task_id': task_id, 'envid': envid, 'stage': stage})
     
-def command_job_finished(task_id):
-    return command('job_finished', {'task_id': task_id})
+def command_wrf_job_finished(task_id):
+    return wrf_command('job_finished', {'task_id': task_id})
     
-def command_job_error(task_id, error_log):
-    return command('job_error', {'task_id': task_id, 'error_log': error_log})
+def command_wrf_job_error(task_id, error_log):
+    return wrf_command('job_error', {'task_id': task_id, 'error_log': error_log})
     

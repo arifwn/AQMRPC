@@ -8,7 +8,7 @@ from servercon import supervisor
 from aqmrpc.models import CurrentJob
 from aqmrpc.jobs import manager as jobmanager
 
-from aqmrpc.misc.rest_client import command_confirm_run, command_report_run_stage, command_job_finished, command_job_error
+from aqmrpc.misc.rest_client import command_wrf_confirm_run, command_wrf_report_run_stage, command_wrf_job_finished, command_wrf_job_error
 
 class WRFRun(supervisor.BaseJob):
     def __init__(self, data, callback=None, envid=None):
@@ -32,7 +32,7 @@ class WRFRun(supervisor.BaseJob):
     def set_up(self):
         # TODO: ask the web interface if the job is not canceled
         try:
-            ret = command_confirm_run(self.data['task_id'])
+            ret = command_wrf_confirm_run(self.data['task_id'])
         except Exception, e:
             log.err(e, '[Job] Exception in command_confirm_run')
             return False
@@ -65,10 +65,10 @@ class WRFRun(supervisor.BaseJob):
         
         stage = 'Model Preparation'
         try:
-            command_report_run_stage(self.data['task_id'], self.envid, stage)
+            command_wrf_report_run_stage(self.data['task_id'], self.envid, stage)
         except Exception, e:
             log.err(e, '[Job] Exception in command_report_run_stage')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             
         return True
         
@@ -85,9 +85,9 @@ class WRFRun(supervisor.BaseJob):
     def callback(self):
         # TODO: tell the web interface the job is finished
         try:
-            ret = command_job_finished(self.data['task_id'])
+            ret = command_wrf_job_finished(self.data['task_id'])
         except Exception, e:
-            log.err(e, '[Job] Exception in command_job_finished')
+            log.err(e, '[Job] Exception in command_wrf_job_finished')
         
     
     def process(self):
@@ -102,15 +102,15 @@ class WRFRun(supervisor.BaseJob):
             self.env.prepare_wps()
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             return
         
         
         stage = 'WPS'
         try:
-            command_report_run_stage(self.data['task_id'], self.envid, stage)
+            command_wrf_report_run_stage(self.data['task_id'], self.envid, stage)
         except Exception, e:
-            log.err(e, '[Job] Exception in command_report_run_stage')
+            log.err(e, '[Job] Exception in command_wrf_report_run_stage')
         
         try:
             self.jobentry = CurrentJob.objects.get(envid=self.envid)
@@ -123,7 +123,7 @@ class WRFRun(supervisor.BaseJob):
             self.env.run_wps()
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             return
         
         try:
@@ -137,13 +137,13 @@ class WRFRun(supervisor.BaseJob):
             self.env.cleanup_wps()
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
         
         stage = 'WRF'
         try:
-            command_report_run_stage(self.data['task_id'], self.envid, stage)
+            command_wrf_report_run_stage(self.data['task_id'], self.envid, stage)
         except Exception, e:
-            log.err(e, '[Job] Exception in command_report_run_stage')
+            log.err(e, '[Job] Exception in command_wrf_report_run_stage')
             
         try:
             self.jobentry = CurrentJob.objects.get(envid=self.envid)
@@ -156,7 +156,7 @@ class WRFRun(supervisor.BaseJob):
             self.env.prepare_wrf()
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             return
         
         try:
@@ -170,7 +170,7 @@ class WRFRun(supervisor.BaseJob):
             self.env.run_wrf()
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             return
         
         try:
@@ -188,9 +188,9 @@ class WRFRun(supervisor.BaseJob):
         
         stage = 'ARWpost'
         try:
-            command_report_run_stage(self.data['task_id'], self.envid, stage)
+            command_wrf_report_run_stage(self.data['task_id'], self.envid, stage)
         except Exception, e:
-            log.err(e, '[Job] Exception in command_report_run_stage')
+            log.err(e, '[Job] Exception in command_wrf_report_run_stage')
             
         try:
             self.jobentry = CurrentJob.objects.get(envid=self.envid)
@@ -203,7 +203,7 @@ class WRFRun(supervisor.BaseJob):
             self.env.run_arwpost(self.data['ARWpostnamelist'])
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             return
         
         try:
@@ -217,7 +217,7 @@ class WRFRun(supervisor.BaseJob):
             self.env.render_grads(self.data['grads_template'])
         except Exception, e:
             log.err(e, '[Job process]')
-            command_job_error(self.data['task_id'], str(e))
+            command_wrf_job_error(self.data['task_id'], str(e))
             return
 
 
