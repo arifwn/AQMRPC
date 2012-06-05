@@ -41,11 +41,11 @@ def command(command, data=None, resource='rest/wrf/m2m/'):
     else:
         raise IOError(response['headers']['status'])
 
-def wrf_command(command, data=None):
-    return command(command, data, 'rest/wrf/m2m/')
+def wrf_command(command_string, data=None):
+    return command(command_string, data, 'rest/wrf/m2m/')
 
-def aermod_command(command, data=None):
-    return command(command, data, 'rest/aermod/m2m/')
+def aermod_command(command_string, data=None):
+    return command(command_string, data, 'rest/aermod/m2m/')
 
 def command_wrf_confirm_run(task_id):
     return wrf_command('confirm_run', {'task_id': task_id})
