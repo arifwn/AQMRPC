@@ -2,7 +2,6 @@
 import json
 import logging
 
-import namelist_reader
 import payload
 from openpyxl.reader.excel import load_workbook
 
@@ -34,10 +33,11 @@ def run(config_file='./config.json'):
         config = json.load(f)
     
     data_file = config['data_file']
-    output_dir = config['output_dir']
-    namelist_wps = config['namelist_wps']
+    save_path = config['save_path']
     grid_w = config['grid_w']
     grid_h = config['grid_h']
+    size_w = config['size_w'] # size of a grid in m
+    size_h = config['size_h']
     pollutants = []
     
     for pollutant in config['pollutants']:
@@ -55,12 +55,13 @@ def run(config_file='./config.json'):
         pollutants.append(plt)
     
     proc = payload.PayloadThreadProc()
-    proc.namelist = namelist_reader.WPSNamelistReader(namelist_wps)
     proc.workbook = load_workbook(data_file)
     proc.source_list = pollutants
-    proc.save_dir = output_dir
-    proc.width    = grid_w
-    proc.height   = grid_h
+    proc.save_path = save_path
+    proc.width = grid_w
+    proc.height = grid_h
+    proc.size_w = size_w
+    proc.size_h = size_h
     proc.start()
     
     

@@ -1,0 +1,22 @@
+{
+    "data_file": "./test/grid_so_no.xlsx",
+    "save_path": "./test/result.txt",
+    "grid_w": 99,
+    "grid_h": 99,
+    "size_w": 1000,
+    "size_h": 1000,
+    "pollutants": [
+        {
+            "pollutant": "SO2",
+            "conversion_factor": 3.1709791983764586e-11,
+            "worksheet": 0,
+            "row_start": 2,
+            "row_end": 9802,
+            "emission_column": "C",
+            "lat_column": "G",
+            "lon_column": "F",
+            "x_column": "D",
+            "y_column": "E"
+        }
+    ]
+}
