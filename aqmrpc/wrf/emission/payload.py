@@ -223,7 +223,8 @@ class PayloadThreadProc(commons.BaseThreadProc):
                         logger.info('saving frame [1] %i %i %s', hour, emission_num, plt)
                         b = numpy.ndarray([], numpy.float32)
                         b.resize((width * n_layer * height,))
-                        if plt == self.pollutant_list[emission_num - 1]:
+                        current_pollutant = self.pollutant_list[emission_num - 1]
+                        if plt.lower() == current_pollutant.strip():
                             logger.info('saving %s', plt)
                             for z in range(n_layer):
                                 for y in range(height):
@@ -245,7 +246,8 @@ class PayloadThreadProc(commons.BaseThreadProc):
                         logger.info('saving frame [2] %i %i %s', hour, emission_num, plt)
                         b = numpy.ndarray([], numpy.float32)
                         b.resize((width * n_layer * height,))
-                        if plt == self.pollutant_list[emission_num - 1]:
+                        current_pollutant = self.pollutant_list[emission_num - 1]
+                        if plt.lower() == current_pollutant.strip():
                             logger.info('saving %s', plt)
                             for z in range(n_layer):
                                 for y in range(height):

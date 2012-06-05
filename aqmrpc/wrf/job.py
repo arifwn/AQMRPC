@@ -133,11 +133,11 @@ class WRFRun(supervisor.BaseJob):
             return
         self.jobentry.step = 'cleanup_wps'
         self.jobentry.save()
-        try:
-            self.env.cleanup_wps()
-        except Exception, e:
-            log.err(e, '[Job process]')
-            command_wrf_job_error(self.data['task_id'], str(e))
+        #try:
+        #    self.env.cleanup_wps()
+        #except Exception, e:
+        #    log.err(e, '[Job process]')
+        #    command_wrf_job_error(self.data['task_id'], str(e))
         
         stage = 'WRF'
         try:
