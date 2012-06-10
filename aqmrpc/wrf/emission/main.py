@@ -38,7 +38,23 @@ class PollutantData():
         else:
             # make sure the timezone is sane
             assert((12 >= self.timezone) and (self.timezone >= -12))
-            self.hourly_fluctuation = hourly_fluctuation
+            # make sure hourly fluctuation data is sane
+            assert(len(hourly_fluctuation) == 24)
+            
+            local_hourly_fluctuation = []
+            tz = self.timezone
+            if tz < 0:
+                tz = 24 - tz
+            
+            for i in range(24):
+                hour = i + tz
+                if hour >= 48:
+                    hour = hour - 48
+                elif hour >= 24:
+                    hour = hour - 24
+                local_hourly_fluctuation.append(hourly_fluctuation[hour])
+            
+            self.hourly_fluctuation = local_hourly_fluctuation
 
 
 def run(config_file='./config.json'):
@@ -55,6 +71,7 @@ def run(config_file='./config.json'):
     namelist_wps = config['namelist_wps']
     grid_w = config['grid_w']
     grid_h = config['grid_h']
+    timezone = config['timezone']
     pollutants = []
     
     for pollutant in config['pollutants']:
@@ -68,7 +85,9 @@ def run(config_file='./config.json'):
                             pollutant['lon_column'],
                             pollutant['x_column'],
                             pollutant['y_column'],
-                            pollutant['emission_column'])
+                            pollutant['emission_column'],
+                            timezone,
+                            pollutant['hourly_fluctuation'])
         pollutants.append(plt)
     
     proc = payload.PayloadThreadProc()
@@ -78,7 +97,7 @@ def run(config_file='./config.json'):
     proc.save_dir = output_dir
     proc.width    = grid_w
     proc.height   = grid_h
-    proc.start()
+    proc.run()
     
     
 if __name__ == '__main__':

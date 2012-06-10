@@ -225,11 +225,12 @@ class PayloadThreadProc(commons.BaseThreadProc):
                         b.resize((width * n_layer * height,))
                         current_pollutant = self.pollutant_list[emission_num - 1]
                         if plt.lower() == current_pollutant.strip():
-                            logger.info('saving %s', plt)
                             for z in range(n_layer):
                                 for y in range(height):
                                     for x in range(width):
-                                        b[x + (n_layer * width * y) + (width * z)] = self.domain_emiss[n][y][x][p] 
+                                        factor = self.source_list[p].hourly_fluctuation[hour-1]
+                                        b[x + (n_layer * width * y) + (width * z)] = self.domain_emiss[n][y][x][p] * factor
+                                        # logger.info('saving %s; factor: %f; conc: %f', plt, factor, self.domain_emiss[n][y][x][p])
                         f.writeReals(b)
             f.close()
             
@@ -248,11 +249,12 @@ class PayloadThreadProc(commons.BaseThreadProc):
                         b.resize((width * n_layer * height,))
                         current_pollutant = self.pollutant_list[emission_num - 1]
                         if plt.lower() == current_pollutant.strip():
-                            logger.info('saving %s', plt)
                             for z in range(n_layer):
                                 for y in range(height):
                                     for x in range(width):
-                                        b[x + (n_layer * width * y) + (width * z)] = self.domain_emiss[n][y][x][p] 
+                                        factor = self.source_list[p].hourly_fluctuation[hour-1]
+                                        b[x + (n_layer * width * y) + (width * z)] = self.domain_emiss[n][y][x][p] * factor
+                                        # logger.info('saving %s; factor: %f; conc: %f', plt, factor, self.domain_emiss[n][y][x][p])
                         f.writeReals(b)
             f.close()
             
