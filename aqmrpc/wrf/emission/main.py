@@ -11,7 +11,9 @@ class PollutantData():
                  row_start, row_end,
                  lat_column, lon_column,
                  x_column, y_column,
-                 emission_column):
+                 emission_column,
+                 timezone=None,
+                 hourly_fluctuation=None):
         self.pollutant = pollutant
         self.conversion_factor = conversion_factor
         self.worksheet = worksheet
@@ -22,6 +24,21 @@ class PollutantData():
         self.lon_column = lon_column
         self.x_column = x_column
         self.y_column = y_column
+        
+        if timezone is None:
+            self.timezone = 0
+        else:
+            self.timezone = timezone
+        
+        if hourly_fluctuation is None:
+            self.hourly_fluctuation = [
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+            ]
+        else:
+            # make sure the timezone is sane
+            assert((12 >= self.timezone) and (self.timezone >= -12))
+            self.hourly_fluctuation = hourly_fluctuation
 
 
 def run(config_file='./config.json'):

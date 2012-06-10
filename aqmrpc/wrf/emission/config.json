@@ -1,21 +1,27 @@
 {
-    "data_file": "./test/data_grid_co_nh3.xlsx",
+    "data_file": "./test/data_grid_so_no.xlsx",
     "namelist_wps": "./test/namelist.wps",
     "output_dir": "./test/",
     "grid_w": 99,
     "grid_h": 99,
+    "timezone": 7,
     "pollutants": [
         {
-            "pollutant": "e_co",
-            "conversion_factor": 0.00011415525114155251,
+            "pollutant": "e_so2",
+            "conversion_factor": 0.11415525114155251,
             "worksheet": 0,
             "row_start": 2,
             "row_end": 9802,
             "emission_column": "I",
-            "lat_column": "C",
-            "lon_column": "B",
+            "lat_column": "G",
+            "lon_column": "F",
             "x_column": "D",
-            "y_column": "E"
+            "y_column": "E",
+            "hourly_fluctuation": [
+                0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5,
+                1.5, 1.45, 1.4, 1.3, 1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5
+            ]
+            
         }
     ]
 }
