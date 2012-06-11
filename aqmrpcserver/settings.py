@@ -142,7 +142,7 @@ AQM_PYTHON_BIN = '/usr/bin/python'
 import os.path
 AQM_CACHE_DIR =  os.path.join(AQM_MODEL_DIR, 'WRF_DATA/cache')
 # can be http or ftp, should be none if no remote cache configured
-AQM_REMOTE_CACHE = 'ftp://localhost/upload/cache/'
+AQM_REMOTE_CACHE = 'https://aqm.sainsmograf.com:8000/media/cache/'
 GRADS_BIN = '/usr/local/bin/grads'
 
 AQMWEB_URL = 'https://aqm.sainsmograf.com:8000'
