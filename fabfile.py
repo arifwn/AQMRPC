@@ -90,4 +90,24 @@ def count_line():
     if len(file_list) > 0:
         local(cmd)
     
+
+def update_deployment():
+    '''Update deployment code.'''
+    
+    deployment_target = '~/AQMSystem/deploy/aqmrpc'
+    local('rm -rf %s/aqmrpc' % deployment_target)
+    local('cp -rf aqmrpc %s/' % deployment_target)
+    
+    local('rm -rf %s/rest' % deployment_target)
+    local('cp -rf rest %s/' % deployment_target)
+    
+    local('rm -rf %s/servercon' % deployment_target)
+    local('cp -rf servercon %s/' % deployment_target)
+    
+    local('rm -rf %s/twisted' % deployment_target)
+    local('cp -rf twisted %s/' % deployment_target)
+    
+    local('cp -rf fabfile.py %s/' % deployment_target)
+    local('cp -rf manage.py %s/' % deployment_target)
+    local('cp -rf servicemaker.py %s/' % deployment_target)
     
