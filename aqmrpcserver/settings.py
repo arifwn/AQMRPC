@@ -140,9 +140,9 @@ AQM_MODEL_DIR = '/home/arif/AQMDir/master'
 AQM_WORKING_DIR = '/home/arif/AQMDir/working'
 AQM_PYTHON_BIN = '/usr/bin/python'
 import os.path
-AQM_CACHE_DIR =  os.path.join(AQM_MODEL_DIR, 'WRF_DATA/cache')
-# can be http or ftp, should be none if no remote cache configured
-AQM_REMOTE_CACHE = 'https://aqm.sainsmograf.com:8000/media/cache/'
+AQM_CACHE_DIR =  os.path.join(AQM_MODEL_DIR, 'WRF_DATA/cache') # no trailing slash!
+# can be http, https or ftp, should be none if no remote cache configured
+AQM_REMOTE_CACHE = 'https://aqm.sainsmograf.com:8000/media/cache' # no trailing slash!
 GRADS_BIN = '/usr/local/bin/grads'
 
 AQMWEB_URL = 'https://aqm.sainsmograf.com:8000'
